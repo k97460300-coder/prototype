@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>济州岛天气 - 降水量</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        html, body {
+            height: auto;
+        }
+        body {
+            margin: 0; background-color: #f0f2f5;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center the cards */
+            padding: 20px;
+            gap: 20px;
+        }
+        .card {
+            width: 100%;
+            max-width: 900px; /* Max width for cards on desktop */
+            height: auto;
+            box-sizing: border-box;
+            display: flex; /* Use flexbox for layout */
+            flex-direction: column; /* Stack header and content vertically */
+        }
+        .card-inner {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Important to contain children */
+        }
+        .card-header {
+            background: #fff; padding: 12px 15px; border-bottom: 1px solid #eee;
+            font-weight: 800; font-size: 16px; color: #1a1a1a; display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+        .refresh-icon {
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 14px;
+            color: #666;
+            transition: transform 0.3s ease;
+        }
+        .refresh-icon:hover {
+            transform: rotate(30deg);
+            color: #333;
+        }
+        .card-content {
+            flex-grow: 1; /* Allow content to fill available space */
+            overflow-y: auto; /* Allow scrolling within the content area if needed */
+            padding: 5px;
+        }
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 12px; background: #e8f5e9; color: #2e7d32; font-weight: bold; }
+
+        /* CCTV Section */
+        .video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-bottom: 1px solid #222; cursor: pointer; }
+        .live-tag { position: absolute; top: 10px; left: 10px; background: #ff5252; color: white; padding: 2px 6px; font-size: 10px; border-radius: 3px; z-index: 10; animation: blink 1.5s infinite; font-weight: bold; }
+        .vid-label { position: absolute; bottom: 8px; left: 10px; color: white; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 4px rgba(0,0,0,0.8); z-index: 10; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes blink { 0%, 100% {opacity: 1;} 50% {opacity: 0.6;} }
+
+        /* Weather Section */
+        .weather-section { padding: 15px 10px; border-bottom: 8px solid #f0f2f5; }
+        .weather-section:last-child { border-bottom: none; }
+        .loc-info { margin-bottom: 12px; }
+        .loc-name { font-size: 18px; font-weight: 900; color: #1a1a1a; }
+        .loc-sub { font-size: 12px; color: #666; margin-left: 5px; font-weight: 500; }
+
+        .grid { display: flex; flex-wrap: wrap; gap: 0; }
+        .col { width: 14.28%; display: flex; flex-direction: column; align-items: center; margin-bottom: 12px; }
+        .weekly-grid .col { width: 14.28%; margin-bottom: 18px; }
+
+        .time { font-size: 11px; color: #757575; font-weight: bold; margin-bottom: 3px; }
+        .icon { font-size: 22px; margin-bottom: 2px; }
+        .temp { font-size: 14px; font-weight: 900; color: #212121; }
+        .wind { font-size: 9px; color: #0288d1; font-weight: 600; margin-top: 1px; }
+        .precip { font-size: 10px; color: #546e7a; font-weight: 500; }
+        .high { color: #d32f2f; } .low { color: #1976d2; }
+        .precip-blue { color: #1e88e5; font-weight: bold; }
+
+        footer { text-align: center; padding: 20px 10px; font-size: 11px; color: #999; }
+        .flight-remark { font-size:11px; font-weight:bold; }
+        .flight-details {
+            flex-grow: 1;
+            flex-shrink: 1;
+            min-width: 0;
+            word-break: break-word;
+        }
+        .flight-status-container {
+            flex-shrink: 0;
+            margin-left: 10px; /* Add some space between details and status */
+        }
+        /* Ensure flight ID and route can wrap if needed */
+        .flight-id-container, .flight-route {
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Card 1: CCTV -->
+        <div class="card">
+            <div class="card-inner" style="background:#000;">
+                <div class="card-header" style="background:#ff5252; color:#fff; border:none;">🔴 济州岛实况 (实时监控)</div>
+                <div class="card-content">
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏝️ 牛岛 (天津港)</div><video id="v1" autoplay muted playsinline></video></div>
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏔️ 汉拿山 (御势岳)</div><video id="v2" autoplay muted playsinline></video></div>
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🛣️ 1100高地 (1100公路)</div><video id="v3" autoplay muted playsinline></video></div>
+                </div>
+            </div>
+        </div>
+        <!-- Card 2: Daily Forecast 1/2 -->
+        <div class="card">
+            <div class="card-inner">
+                <div class="card-header">☀️ 今日逐时预报 (1/2) <span class="badge" id="date-label"></span></div>
+                <div class="card-content" id="daily-list-1">
+                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取实时天气数据...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card 3: Daily Forecast 2/2 -->
+        <div class="card">
+            <div class="card-inner">
+                <div class="card-header">☀️ 今日逐时预报 (2/2) <span class="badge" id="date-label-2"></span></div>
+                <div class="card-content" id="daily-list-2">
+                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取实时天气数据...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Weekly Forecast 1/2 -->
+        <div class="card">
+            <div class="card-inner">
+                <div class="card-header">📅 未来10天长期预报 (1/2) <span class="badge" id="weekly-status-1">更新中</span></div>
+                <div class="card-content" id="weekly-list-1">
+                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取长期预报数据...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card 5: Weekly Forecast 2/2 -->
+        <div class="card">
+            <div class="card-inner">
+                <div class="card-header">📅 未来10天长期预报 (2/2) <span class="badge" id="weekly-status-2">更新中</span></div>
+                <div class="card-content" id="weekly-list-2">
+                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取长期预报数据...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card 6: Hallasan Status -->
+        <div class="card">
+            <div class="card-inner">
+                <div class="card-header">🏔️ 汉拿山探访路管制信息 <span class="badge" id="hallasan-status">查询中</span></div>
+                <div class="card-content" id="hallasan-list">
+                    <div style="padding:20px; text-align:center; color:#999; font-size:12px;">正在获取实时管制信息...</div>
+                </div>
+                <footer>Data provided by Korea Meteorological Administration</footer>
+            </div>
+        </div>
+
+        <!-- Card 7: Flight Departures -->
+        <div class="card">
+            <div class="card-inner">
+                <div class="card-header">✈️ 国际线出发信息 <span class="badge" id="flight-dep-status">更新中</span> <span class="refresh-icon" onclick="refreshDepartureFlights()">🔄</span></div>
+                <div class="card-content" id="flight-list-dep">
+                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取出发信息...</div>
+                </div>
+                 <footer>Data provided by Korea Airports Corporation</footer>
+            </div>
+        </div>
+        
+        <!-- Card 8: Flight Arrivals -->
+        <div class="card">
+            <div class="card-inner">
+                <div class="card-header">✈️ 国际线到达信息 <span class="badge" id="flight-arr-status">更新中</span> <span class="refresh-icon" onclick="refreshArrivalFlights()">🔄</span></div>
+                <div class="card-content" id="flight-list-arr">
+                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取到达信息...</div>
+                </div>
+                 <footer>Data provided by Korea Airports Corporation</footer>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function log(msg) {
+            if (typeof msg === 'object') {
+                console.log(JSON.stringify(msg, null, 2));
+            } else {
+                console.log(msg);
+            }
+        }
+
+        const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce'; 
+        const API_KEY = MASTER_KEY.trim(); 
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth()+1).padStart(2,'0'); 
+        const dd = String(now.getDate()).padStart(2,'0');
+        const todayStr = yyyy + mm + dd;
+        
+        const dateText = (now.getMonth()+1) + '月' + now.getDate() + '日';
+        document.getElementById('date-label').innerText = dateText;
+        if (document.getElementById('date-label-2')) {
+            document.getElementById('date-label-2').innerText = dateText;
+        }
+
+        function getFormatDate(date) {
+            const y = date.getFullYear();
+            const m = ('0' + (date.getMonth() + 1)).slice(-2);
+            const d = ('0' + date.getDate()).slice(-2);
+            return y + '' + m + '' + d;
+        }
+
+
+        async function initDaily() {
+            const locs = [
+                {n:"济州市 (莲洞)", sub:"Yeon-dong", x:52, y:38},
+                {n:"西归浦 (中文)", sub:"Jungmun", x:52, y:32},
+                {n:"汉拿山", sub:"Halla Mountain", x:52, y:35},
+                {n:"牛岛", sub:"Udo Island", x:60, y:38}
+            ];
+            
+            let baseDate = todayStr;
+            let baseTime = "0200";
+            if (now.getHours() < 3) {
+                 const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
+                 baseDate = getFormatDate(yD);
+                 baseTime = "2300";
+            }
+
+            const container1 = document.getElementById('daily-list-1');
+            const container2 = document.getElementById('daily-list-2');
+            container1.innerHTML = '';
+            container2.innerHTML = '';
+
+            for (const [index, loc] of locs.entries()) {
+                const targetContainer = index < 2 ? container1 : container2;
+                try {
+                    const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${API_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`;
+                    const res = await fetch(url);
+                    const json = await res.json();
+                    
+                    const hourly = {};
+                    if(json.response && json.response.header.resultCode === '00'){
+                        json.response.body.items.item.forEach(i => {
+                            if (i.fcstDate === todayStr) {
+                                const h = parseInt(i.fcstTime.slice(0,2));
+                                if(h>=9 && h<=22) {
+                                    if(!hourly[h]) hourly[h] = {};
+                                    hourly[h][i.category] = i.fcstValue;
+                                }
+                            }
+                        });
+
+                        let html = '';
+                        for(let h=9; h<=22; h++) {
+                            const d = hourly[h] || {};
+                            let icon = '☀️';
+                            const pty=parseInt(d.PTY||0), sky=parseInt(d.SKY||1);
+                            if(pty>0) icon=(pty===3)?'❄️':'🌧️'; else if(sky>8) icon='☁️'; else if(sky>5) icon='⛅';
+                            if(h>=19 && (icon==='☀️'||icon==='⛅')) icon='🌙';
+
+                            let pcp = d.PCP || '0';
+                            if (pcp === "강수없음") pcp = "0mm";
+                            else if (pcp.includes("미만")) pcp = "~1mm";
+                            else if (!pcp.endsWith("mm")) pcp += "mm";
+
+                            html += `<div class="col"><div class="time">${h}h</div><div class="icon">${icon}</div><div class="temp">${d.TMP||'-'}°</div><div class="wind">${d.WSD||'-'}m/s</div><div class="precip ${pcp!=='0mm'?'precip-blue':''}">${pcp}</div></div>`;
+                        }
+                        targetContainer.innerHTML += `<div class="weather-section"><div class="loc-info"><span class="loc-name">${loc.n}</span><span class="loc-sub">${loc.sub}</span></div><div class="grid">${html}</div></div>`;
+                    }
+                } catch(e) { log('Daily Error: ' + e.message); }
+            }
+        }
+
+        async function initWeekly() {
+            const container1 = document.getElementById('weekly-list-1');
+            const container2 = document.getElementById('weekly-list-2');
+            if (document.getElementById('weekly-status-1')) document.getElementById('weekly-status-1').innerText = "更新中";
+            if (document.getElementById('weekly-status-2')) document.getElementById('weekly-status-2').innerText = "更新中";
+            container1.innerHTML = '';
+            container2.innerHTML = '';
+            
+            const locs = [
+                { name: "济州市", sub: "Jeju City", regIdTemp: '11G00201', regIdLand: '11G00000', nx:52, ny:38 },
+                { name: "西归浦", sub: "Seogwipo", regIdTemp: '11G00401', regIdLand: '11G00000', nx:52, ny:32 },
+                { name: "汉拿山", sub: "Halla Mountain", regIdTemp: '11G00401', regIdLand: '11G00000', nx:52, ny:35 },
+                { name: "牛岛", sub: "Udo Island", regIdTemp: '11G00302', regIdLand: '11G00000', nx:60, ny:38 }
+            ];
+
+            let shortBaseDate = todayStr;
+            let shortBaseTime = "0200";
+            if (now.getHours() < 3) {
+                 const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
+                 shortBaseDate = getFormatDate(yD);
+                 shortBaseTime = "2300";
+            }
+
+            const h = now.getHours();
+            const m = now.getMinutes();
+            let midTmFc;
+
+            if (h < 6 || (h === 6 && m < 15)) { // Before 6:15 AM
+                 const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
+                 midTmFc = getFormatDate(yD) + '1800';
+            } else if (h < 18 || (h === 18 && m < 15)) { // Between 6:15 AM and 6:15 PM
+                 midTmFc = todayStr + '0600'; 
+            } else { // After 6:15 PM
+                 midTmFc = todayStr + '1800'; 
+            }
+
+            for (const [index, loc] of locs.entries()) {
+                const targetContainer = index < 2 ? container1 : container2;
+                let combinedData = {};
+                
+                try {
+                    const urlS = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${API_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${shortBaseDate}&base_time=${shortBaseTime}&nx=${loc.nx}&ny=${loc.ny}`;
+                    const resS = await fetch(urlS); const jsonS = await resS.json();
+                    
+                    if(jsonS.response && jsonS.response.header.resultCode === '00'){
+                        const tempDays = {};
+                        jsonS.response.body.items.item.forEach(it => {
+                            const date = it.fcstDate;
+                            if(!tempDays[date]) tempDays[date] = { min:100, max:-100, temps:[], hourlyData: Array(24).fill(null).map(() => ({})) };
+                            
+                            if(it.category === 'TMN') tempDays[date].min = parseFloat(it.fcstValue);
+                            if(it.category === 'TMX') tempDays[date].max = parseFloat(it.fcstValue);
+                            if(it.category === 'TMP') tempDays[date].temps.push(parseFloat(it.fcstValue));
+
+                            const h = parseInt(it.fcstTime.slice(0, 2));
+                            tempDays[date].hourlyData[h][it.category] = it.fcstValue;
+                        });
+                        
+                        for(let i=0; i<=3; i++){
+                            const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
+                            const dStr = getFormatDate(d);
+                            const t = tempDays[dStr];
+                            if(t) {
+                                if(t.min === 100 && t.temps.length > 0) t.min = Math.min(...t.temps);
+                                if(t.max === -100 && t.temps.length > 0) t.max = Math.max(...t.temps);
+
+                                const weatherCounts = {};
+                                let dominantWeather = "맑음";
+                                let maxPop = 0;
+
+                                for (let h = 9; h <= 22; h++) {
+                                    const hourData = t.hourlyData[h] || {};
+                                    const pty = parseInt(hourData.PTY || 0);
+                                    const sky = parseInt(hourData.SKY || 1);
+                                    const pop = parseInt(hourData.POP || 0);
+                                    if (pop > maxPop) maxPop = pop;
+
+                                    let weatherKey = '맑음';
+                                    if (pty > 0) {
+                                        weatherKey = (pty === 3) ? '눈' : '비';
+                                    } else {
+                                        if (sky === 4) weatherKey = '흐림';
+                                        else if (sky === 3) weatherKey = '구름많음';
+                                    }
+                                    weatherCounts[weatherKey] = (weatherCounts[weatherKey] || 0) + 1;
+                                }
+
+                                let maxCount = 0;
+                                for (const weather in weatherCounts) {
+                                    if (weatherCounts[weather] > maxCount) {
+                                        maxCount = weatherCounts[weather];
+                                        dominantWeather = weather;
+                                    }
+                                }
+                                
+                                combinedData[i] = { min: t.min, max: t.max, wf: dominantWeather, pop: maxPop };
+                            }
+                        }
+                    }
+                } catch(e) { log('Short API Error: ' + e.message); }
+
+                try {
+                    const urlT = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?serviceKey=${API_KEY}&dataType=JSON&regId=${loc.regIdTemp}&tmFc=${midTmFc}`;
+                    const urlL = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?serviceKey=${API_KEY}&dataType=JSON&regId=${loc.regIdLand}&tmFc=${midTmFc}`;
+
+                    log(`Fetching Mid-term for ${loc.name}`);
+                    log(`URL_TA: ${urlT}`);
+                    const resT = await fetch(urlT); const jsonT = await resT.json();
+                    log(`Response_TA for ${loc.name}:`);
+                    log(jsonT);
+                    
+                    log(`URL_LAND: ${urlL}`);
+                    const resL = await fetch(urlL); const jsonL = await resL.json();
+                    log(`Response_LAND for ${loc.name}:`);
+                    log(jsonL);
+
+                    if(jsonT.response && jsonL.response && jsonT.response.header.resultCode === '00' && jsonL.response.header.resultCode === '00') {
+                        const t = jsonT.response.body.items.item[0];
+                        const l = jsonL.response.body.items.item[0];
+                        
+                        for(let i=4; i<=10; i++) {
+                            let wf = l['wf'+i+'Pm'] || l['wf'+i+'Am'] || l['wf'+i] || (i===4 ? (l['wf3Pm'] || "맑음") : "맑음");
+                            let pop = l['rnSt'+i+'Pm'] ?? l['rnSt'+i+'Am'] ?? l['rnSt'+i] ?? 0;
+                            let minT = t['taMin'+i] ?? (i > 3 ? t['taMin'+(i-1)] : undefined);
+                            let maxT = t['taMax'+i] ?? (i > 3 ? t['taMax'+(i-1)] : undefined);
+                            combinedData[i] = { min: minT, max: maxT, wf: wf, pop: pop };
+                            if (i === 4) {
+                                log(`combinedData[4] for ${loc.name}:`);
+                                log(combinedData[4]);
+                            }
+                        }
+                    }
+                } catch(e) { log('Mid API Error: ' + e.message); }
+
+                let html = '';
+                for(let i=0; i<=10; i++) {
+                    const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
+                    const label = (d.getMonth()+1) + '/' + d.getDate();
+                    const w = combinedData[i] || { wf: '-', min: '-', max: '-', pop: '-' };
+                    
+                    const wf = w.wf || "-";
+                    let icon = '☀️';
+                    if(wf.includes('흐림')) icon='☁️';
+                    else if(wf.includes('구름') || wf.includes('많음')) icon='⛅';
+                    else if(wf.includes('비')) icon='🌧️';
+                    else if(wf.includes('눈')) icon='❄️';
+
+                    const minT = (w.min !== undefined && w.min !== 100) ? w.min : '-';
+                    const maxT = (w.max !== undefined && w.max !== -100) ? w.max : '-';
+                    const pop = (w.pop !== undefined) ? w.pop : 0;
+
+                    html += `<div class="col"><div class="time">${label}<br><span style="font-size:9px; color:#aaa;">+${i}D</span></div><div class="icon">${icon}</div><div class="temp"><span class="high">${maxT}</span>/<span class="low">${minT}</span></div><div class="precip ${pop>0?'precip-blue':''}">${pop}%</div></div>`;
+                }
+                targetContainer.innerHTML += `<div class="weather-section"><div class="loc-info"><span class="loc-name">${loc.name}</span><span class="loc-sub">${loc.sub}</span></div><div class="grid weekly-grid">${html}</div></div>`;
+            }
+        }
+
+        function initCCTV() {
+            if(Hls.isSupported()) {
+                const streams = [
+                    { id: 'v1', url: 'http://211.114.96.121:1935/jejusi7/11-24.stream/playlist.m3u8' }, // 우도
+                    { id: 'v2', url: 'http://119.65.216.155:1935/live/cctv03.stream_360p/playlist.m3u8' }, // 윗세오름
+                    { id: 'v3', url: 'http://119.65.216.155:1935/live/cctv05.stream_360p/playlist.m3u8' } 
+                ];
+                streams.forEach(s => {
+                    const video = document.getElementById(s.id);
+                    if(video) {
+                        const hls = new Hls();
+                        hls.loadSource(s.url);
+                        hls.attachMedia(video);
+                    }
+                });
+            }
+        }
+        
+        async function initHallasan() {
+            log("Start initHallasan (Robust Mode)");
+            const container = document.getElementById('hallasan-list');
+            const statusSpan = document.getElementById('hallasan-status');
+            if(!container) return;
+
+            const dataUrl = 'https://jeju.go.kr/tool/hallasan/road-body.jsp';
+            const mainUrl = 'https://jeju.go.kr/hallasan/index.htm';
+            const proxyBase = 'https://api.allorigins.win/raw?url=';
+            
+            let res;
+            let usedSource = 'Direct';
+
+            try {
+                log("Trying 1st (Direct): " + dataUrl);
+                res = await fetch(dataUrl);
+                if (!res.ok) throw new Error("Direct fetch failed: " + res.status);
+                usedSource = 'Direct Body';
+
+            } catch (e1) {
+                log("1st failed: " + e1.message);
+                
+                try {
+                    const proxyUrl = proxyBase + encodeURIComponent(dataUrl);
+                    log("Trying 2nd (Proxy Body): " + proxyUrl);
+                    res = await fetch(proxyUrl);
+                    if (!res.ok) throw new Error("Proxy body failed: " + res.status);
+                    usedSource = 'Proxy Body';
+                } catch (e2) {
+                    log("2nd failed: " + e2.message);
+
+                    try {
+                        const mainProxyUrl = proxyBase + encodeURIComponent(mainUrl);
+                        log("Trying 3rd (Proxy Main): " + mainProxyUrl);
+                        res = await fetch(mainProxyUrl);
+                        if (!res.ok) throw new Error("All sources failed");
+                        usedSource = 'Proxy Main';
+                    } catch (e3) {
+                        log("3rd failed: " + e3.message);
+                        container.innerHTML = `...`; // Error HTML
+                        if(statusSpan) statusSpan.innerText = "错误";
+                        return;
+                    }
+                }
+            }
+                
+            let text = '';
+            try {
+                const contentType = res.headers.get('content-type');
+                if (contentType && (contentType.includes('charset=euc-kr') || contentType.includes('charset=EUC-KR'))) {
+                    const buffer = await res.arrayBuffer();
+                    const decoder = new TextDecoder('euc-kr');
+                    text = decoder.decode(buffer);
+                } else {
+                    text = await res.text();
+                }
+            } catch (parseErr) {
+                log("Text decoding failed: " + parseErr.message);
+                return;
+            }
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            
+            const trails = [
+                { id: '어리목', name: '御里牧 (御里牧)' },
+                { id: '영실', name: '灵室 (灵室)' },
+                { id: '어승생악', name: '御乘生岳 (御乘生岳)' },
+                { id: '돈내코', name: '顿乃克 (顿乃克)' },
+                { id: '석굴암', name: '石窟庵 (石窟庵)' },
+                { id: '관음사', name: '观音寺 (观音寺)' },
+                { id: '성판악', name: '城板岳 (城板岳)' }
+            ];
+
+            const getStatusCN = (st) => {
+                if(st === '정상') return { t:'🟢 正常通行', c:'#4caf50' }; 
+                if(st === '부분') return { t:'🟡 部分管制', c:'#ff9800' };
+                if(st === '통제') return { t:'🔴 全面管制', c:'#f44336' }; 
+                return { t:'⚪ 信息未知', c:'#999' }; 
+            };
+
+            let html = `<div style="padding: 10px;">`; 
+            
+            const dlList = doc.querySelectorAll('.main-visit-list');
+            trails.forEach(t => {
+                let st = '확인불가';
+                let targetDl = Array.from(dlList).find(dl => dl.textContent.includes(t.id.trim()));
+
+                if (targetDl) {
+                    const statusText = targetDl.querySelector('.situation')?.textContent || targetDl.textContent;
+                    if (statusText.includes('정상')) st = '정상';
+                    else if (statusText.includes('통제')) st = '통제';
+                    else if (statusText.includes('부분')) st = '부분';
+                }
+                const info = getStatusCN(st);
+                html += `
+                    <div style="background:#f8f9fa; padding:12px 15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid #e9ecef; box-sizing:border-box; margin-bottom: 8px;">
+                        <span style="font-weight:800; font-size:13px; color:#2d3436; flex:1;">${t.name}</span>
+                        <span style="font-size:11px; font-weight:bold; color:${info.c}; background:${info.c}15; padding:4px 10px; border-radius:20px; border:1px solid ${info.c}30; white-space:nowrap;">${info.t}</span>
+                    </div>`;
+            });
+            html += '</div>';
+
+            html += `
+                <div style="padding: 0 10px 10px;">
+                    <a href="https://jeju.go.kr/hallasan/index.htm" target="_blank" 
+                       style="display:flex; align-items:center; justify-content:center; gap:5px; width:100%; background:#4a69bd; color:white; text-decoration:none; 
+                              padding:12px 0; border-radius:8px; text-align:center; font-weight:bold; font-size:13px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                        🌐 访问汉拿山官网
+                    </a>
+                </div>`;
+            container.innerHTML = html;
+            if(statusSpan) statusSpan.innerText = "已更新";
+        }
+
+        // 함수 실행 시작
+        initCCTV();
+        initDaily();
+        setTimeout(initWeekly, 1000);
+        setTimeout(initHallasan, 2000);
+        setTimeout(initDepartureFlights, 2500);
+        setTimeout(initArrivalFlights, 3000);
+
+        function createFlightItemHTML(flight, type) {
+            const rmk = flight.rmk || '';
+            const status = rmk.includes('지연') ? { t: '延误', c: '#ff9800' } : 
+                           rmk.includes('결항') ? { t: '取消', c: '#f44336' } :
+                           { t: rmk, c: '#2e7d32' };
+            
+            const route = type === 'dep' ? `目的地: ${flight.arrAirport}` : `出发地: ${flight.depAirport}`;
+
+            return `
+                <div class="flight-info-item">
+                    <div class="flight-details">
+                        <div class="flight-id-container">
+                            <span class="airline-tag">${flight.airline}</span>
+                            ${flight.flightId}
+                        </div>
+                        <div class="flight-route">${route}</div>
+                    </div>
+                    <div class="flight-status-container">
+                        <div class="flight-time">${flight.scheduledatetime.slice(-4, -2)}:${flight.scheduledatetime.slice(-2)}</div>
+                        <span class="flight-remark" style="color:${status.c};">${status.t}</span>
+                    </div>
+                </div>`;
+        }
+
+        async function fetchFlightData(url, containerId, statusId, type) {
+            const container = document.getElementById(containerId);
+            const statusSpan = document.getElementById(statusId);
+            if (!container || !statusSpan) return;
+
+            // Reverting to allorigins.win proxy as it's more suitable for non-interactive WebView environments
+            const proxyBase = 'https://api.allorigins.win/raw?url=';
+            const proxiedUrl = proxyBase + encodeURIComponent(url);
+            log(`Fetching ${type} flights from: ` + proxiedUrl);
+
+            try {
+                const res = await fetch(proxiedUrl);
+                const text = await res.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "text/xml");
+
+                const resultCodeNode = xmlDoc.querySelector("resultCode");
+                if (!resultCodeNode || resultCodeNode.textContent !== '00') {
+                    const msg = xmlDoc.querySelector("resultMsg")?.textContent || 'Unknown API Error';
+                    throw new Error(msg);
+                }
+
+                const items = xmlDoc.querySelectorAll("item");
+                let relevantFlights = [];
+                items.forEach(item => {
+                    const rmk = item.querySelector("rmk")?.textContent || '';
+                    if (rmk.includes('지연') || rmk.includes('결항')) {
+                        relevantFlights.push({
+                            airline: item.querySelector("airline")?.textContent || '',
+                            flightId: item.querySelector("flightid")?.textContent || '', // Note: 'flightid' in response, not 'flightId'
+                            depAirport: item.querySelector("depAirport")?.textContent || '',
+                            arrAirport: item.querySelector("arrAirport")?.textContent || '',
+                            scheduledatetime: item.querySelector("scheduledatetime")?.textContent || '',
+                            rmk: rmk
+                        });
+                    }
+                });
+
+                if (relevantFlights.length > 0) {
+                    container.innerHTML = '<div style="padding: 10px;">' + relevantFlights.map(f => createFlightItemHTML(f, type)).join('') + '</div>';
+                    statusSpan.innerText = "已更新";
+                } else {
+                    container.innerHTML = `<div style="padding:40px; text-align:center; color:#999; font-size:12px;">目前没有延误或取消的国际航班。</div>`;
+                    statusSpan.innerText = "无延误";
+                }
+            } catch (e) {
+                log(`Flight Status Error (${type}): ${e.message}`);
+                container.innerHTML = `<div style="padding:40px; text-align:center; color:#999; font-size:12px;">获取信息失败: ${e.message}</div>`;
+                statusSpan.innerText = "错误";
+            }
+        }
+
+        async function initDepartureFlights() {
+            const depUrl = `http://openapi.airport.co.kr/service/rest/StatusOfFlights/getDepFlightStatusList?serviceKey=${API_KEY}&airport_code=CJU&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100`;
+            await fetchFlightData(depUrl, 'flight-list-dep', 'flight-dep-status', 'dep');
+        }
+
+        async function initArrivalFlights() {
+            const arrUrl = `http://openapi.airport.co.kr/service/rest/StatusOfFlights/getArrFlightStatusList?serviceKey=${API_KEY}&arr_airport_code=CJU&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100`;
+            await fetchFlightData(arrUrl, 'flight-list-arr', 'flight-arr-status', 'arr');
+        }
+
+        // 수동 새로고침 함수
+        function refreshDepartureFlights() {
+            const statusSpan = document.getElementById('flight-dep-status');
+            if(statusSpan) statusSpan.innerText = "刷新中...";
+            initDepartureFlights();
+        }
+
+        function refreshArrivalFlights() {
+            const statusSpan = document.getElementById('flight-arr-status');
+            if(statusSpan) statusSpan.innerText = "刷新中...";
+            initArrivalFlights();
+        }
+    </script>
+</body>
+</html>
