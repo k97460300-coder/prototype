@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+2<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -202,8 +202,6 @@
             }
         }
 
-        const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce'; 
-        const API_KEY = MASTER_KEY.trim(); 
 
         const now = new Date();
         const yyyy = now.getFullYear();
@@ -249,7 +247,7 @@
             for (const [index, loc] of locs.entries()) {
                 const targetContainer = index < 2 ? container1 : container2;
                 try {
-                    const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${API_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`;
+                    const url = `/api?url=${encodeURIComponent(`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?numOfRows=1000&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`)}`;
                     const res = await fetch(url);
                     const json = await res.json();
                     
@@ -327,7 +325,7 @@
                 let combinedData = {};
                 
                 try {
-                    const urlS = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${API_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${shortBaseDate}&base_time=${shortBaseTime}&nx=${loc.nx}&ny=${loc.ny}`;
+                    const urlS = `/api?url=${encodeURIComponent(`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?numOfRows=1000&pageNo=1&dataType=JSON&base_date=${shortBaseDate}&base_time=${shortBaseTime}&nx=${loc.nx}&ny=${loc.ny}`)}`;
                     const resS = await fetch(urlS); const jsonS = await resS.json();
                     
                     if(jsonS.response && jsonS.response.header.resultCode === '00'){
@@ -388,8 +386,8 @@
                 } catch(e) { log('Short API Error: ' + e.message); }
 
                 try {
-                    const urlT = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?serviceKey=${API_KEY}&dataType=JSON&regId=${loc.regIdTemp}&tmFc=${midTmFc}`;
-                    const urlL = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?serviceKey=${API_KEY}&dataType=JSON&regId=${loc.regIdLand}&tmFc=${midTmFc}`;
+                    const urlT = `/api?url=${encodeURIComponent(`https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?dataType=JSON&regId=${loc.regIdTemp}&tmFc=${midTmFc}`)}`;
+                    const urlL = `/api?url=${encodeURIComponent(`https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId=${loc.regIdLand}&tmFc=${midTmFc}`)}`;
 
                     log(`Fetching Mid-term for ${loc.name}`);
                     log(`URL_TA: ${urlT}`);
@@ -446,9 +444,9 @@
         function initCCTV() {
             if(Hls.isSupported()) {
                 const streams = [
-                    { id: 'v1', url: 'http://211.114.96.121:1935/jejusi7/11-24.stream/playlist.m3u8' }, // 우도
-                    { id: 'v2', url: 'http://119.65.216.155:1935/live/cctv03.stream_360p/playlist.m3u8' }, // 윗세오름
-                    { id: 'v3', url: 'http://119.65.216.155:1935/live/cctv05.stream_360p/playlist.m3u8' } 
+                    { id: 'v1', url: '/cctv?url=http://211.114.96.121:1935/jejusi7/11-24.stream/playlist.m3u8' }, // 우도
+                    { id: 'v2', url: '/cctv?url=http://119.65.216.155:1935/live/cctv03.stream_360p/playlist.m3u8' }, // 윗세오름
+                    { id: 'v3', url: '/cctv?url=http://119.65.216.155:1935/live/cctv05.stream_360p/playlist.m3u8' } 
                 ];
                 streams.forEach(s => {
                     const video = document.getElementById(s.id);
@@ -468,8 +466,7 @@
             if(!container) return;
 
             const dataUrl = 'https://jeju.go.kr/tool/hallasan/road-body.jsp';
-            const mainUrl = 'https://jeju.go.kr/hallasan/index.htm';
-            const proxyBase = 'https://api.allorigins.win/raw?url=';
+const proxyBase = '/proxy?url=';
             
             let res;
             let usedSource = 'Direct';
@@ -661,12 +658,12 @@
         }
 
         async function initDepartureFlights() {
-            const depUrl = `http://openapi.airport.co.kr/service/rest/StatusOfFlights/getDepFlightStatusList?serviceKey=${API_KEY}&airport_code=CJU&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100`;
+            const depUrl = `/api?url=${encodeURIComponent(`http://openapi.airport.co.kr/service/rest/StatusOfFlights/getDepFlightStatusList?airport_code=CJU&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100`)}`;
             await fetchFlightData(depUrl, 'flight-list-dep', 'flight-dep-status', 'dep');
         }
 
         async function initArrivalFlights() {
-            const arrUrl = `http://openapi.airport.co.kr/service/rest/StatusOfFlights/getArrFlightStatusList?serviceKey=${API_KEY}&arr_airport_code=CJU&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100`;
+            const arrUrl = `/api?url=${encodeURIComponent(`http://openapi.airport.co.kr/service/rest/StatusOfFlights/getArrFlightStatusList?arr_airport_code=CJU&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100`)}`;
             await fetchFlightData(arrUrl, 'flight-list-arr', 'flight-arr-status', 'arr');
         }
 
