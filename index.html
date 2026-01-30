@@ -114,14 +114,14 @@
             <div class="card-inner" style="background:#000;">
                 <div class="card-header" style="background:#ff5252; color:#fff; border:none;">🔴 济州岛实况 (实时监控)</div>
                 <div class="card-content">
-                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏝️ 牛岛 (天津港)</div><video id="v1" autoplay muted playsinline></video></div>
                     <div class="video-box">
-                        <div class="offline-overlay">CCTV 스트림이 오프라인 상태입니다.</div>
-                        <div class="live-tag" style="display:none;">LIVE</div><div class="vid-label">🏔️ 汉拿山 (御势岳)</div><video id="v2"></video>
+                        <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
                     </div>
                     <div class="video-box">
-                        <div class="offline-overlay">CCTV 스트림이 오프라인 상태입니다.</div>
-                        <div class="live-tag" style="display:none;">LIVE</div><div class="vid-label">🛣️ 1100高地 (1100公路)</div><video id="v3"></video>
+                        <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
+                    </div>
+                    <div class="video-box">
+                        <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
                     </div>
                 </div>
             </div>
@@ -449,19 +449,6 @@
         }
 
         function initCCTV() {
-            if(Hls.isSupported()) {
-                const streams = [
-                    { id: 'v1', url: '/cctv?url=http://211.114.96.121:1935/jejusi7/11-24.stream/playlist.m3u8' } // 우도
-                ];
-                streams.forEach(s => {
-                    const video = document.getElementById(s.id);
-                    if(video) {
-                        const hls = new Hls();
-                        hls.loadSource(s.url);
-                        hls.attachMedia(video);
-                    }
-                });
-            }
         }
         
         async function initHallasan() {
@@ -615,13 +602,10 @@ const proxyBase = '/proxy?url=';
             const statusSpan = document.getElementById(statusId);
             if (!container || !statusSpan) return;
 
-            // Reverting to allorigins.win proxy as it's more suitable for non-interactive WebView environments
-            const proxyBase = 'https://api.allorigins.win/raw?url=';
-            const proxiedUrl = proxyBase + encodeURIComponent(url);
-            log(`Fetching ${type} flights from: ` + proxiedUrl);
+            log(`Fetching ${type} flights from: ` + url);
 
             try {
-                const res = await fetch(proxiedUrl);
+                const res = await fetch(url);
                 const text = await res.text();
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(text, "text/xml");

@@ -44,25 +44,9 @@ export default {
     }
 
     if (url.pathname === '/cctv') {
-      const cctvUrl = url.searchParams.get('url');
-      if (!cctvUrl) {
-        return new Response('Missing url parameter', { status: 400 });
-      }
-
-      const cctvRequest = new Request(cctvUrl, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-      });
-
-      const cctvResponse = await fetch(cctvRequest);
-
-      const response = new Response(cctvResponse.body, cctvResponse);
-      response.headers.set('Access-Control-Allow-Origin', '*');
-      response.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
-
-      return response;
+      // This is a placeholder for the CCTV proxy.
+      // The current implementation is non-functional and will be addressed separately.
+      return new Response('CCTV service is temporarily unavailable.', { status: 503 });
     }
 
     if (url.pathname === '/proxy') {
