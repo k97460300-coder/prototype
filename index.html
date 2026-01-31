@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>济州岛天气 - 降水量</title>
+    <title>济州岛实时天气与旅行信息</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
@@ -261,18 +261,24 @@
                 <span class="icon">📹</span>
                 <h2>济州岛实况 (实时监控)</h2>
             </div>
-                <div class="card-content">
+            <div class="section-content">
+                <div class="cctv-grid">
                     <div class="video-box">
                         <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
+                        <div class="vid-label">🏝️ 牛岛 (天津港)</div>
                     </div>
                     <div class="video-box">
                         <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
+                        <div class="vid-label">🏔️ 汉拿山 (御势岳)</div>
                     </div>
                     <div class="video-box">
                         <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
+                        <div class="vid-label">🛣️ 1100高地 (1100公路)</div>
                     </div>
                 </div>
+            </div>
         </section>
+
         <div class="adsense-placeholder">
             谷歌广告 (Google AdSense) 将在此处展示
         </div>
@@ -300,7 +306,7 @@
                 <div id="weekly-list-2"><div class="placeholder-text"></div></div>
             </div>
         </section>
-        
+
         <!-- AdSense Placeholder -->
         <div class="adsense-placeholder">
             谷歌广告 (Google AdSense) 将在此处展示
@@ -335,9 +341,15 @@
                 </div>
             </div>
         </section>
-    </div>
-    
+    </main>
+
+    <footer class="app-footer">
+        <p>数据来源: 韩国气象厅 (KMA), 韩国机场集团 (KAC)</p>
+        <p>&copy; 2026 济州岛实时信息. All Rights Reserved.</p>
+    </footer>
+
     <script>
+        // Data fetching and rendering logic remains the same
         function log(msg) {
             if (typeof msg === 'object') {
                 console.log(JSON.stringify(msg, null, 2));
@@ -345,8 +357,7 @@
                 console.log(msg);
             }
         }
-
-
+        
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth()+1).padStart(2,'0'); 
@@ -355,9 +366,6 @@
         
         const dateText = (now.getMonth()+1) + '月' + now.getDate() + '日';
         document.getElementById('date-label').innerText = dateText;
-        if (document.getElementById('date-label-2')) {
-            document.getElementById('date-label-2').innerText = dateText;
-        }
 
         function getFormatDate(date) {
             const y = date.getFullYear();
@@ -365,7 +373,6 @@
             const d = ('0' + date.getDate()).slice(-2);
             return y + '' + m + '' + d;
         }
-
 
         async function initDaily() {
             const locs = [
@@ -408,6 +415,7 @@
                         });
 
                         let html = '';
+                        html += `<div class="hourly-grid">`;
                         for(let h=9; h<=22; h++) {
                             const d = hourly[h] || {};
                             let icon = '☀️';
@@ -420,22 +428,17 @@
                             else if (pcp.includes("미만")) pcp = "~1mm";
                             else if (!pcp.endsWith("mm")) pcp += "mm";
 
-                            html += `<div class="col"><div class="time">${h}h</div><div class="icon">${icon}</div><div class="temp">${d.TMP||'-'}°</div><div class="wind">${d.WSD||'-'}m/s</div><div class="precip ${pcp!=='0mm'?'precip-blue':''}">${pcp}</div></div>`;
+                            html += `<div class="hourly-col"><div class="time">${h}h</div><div class="icon">${icon}</div><div class="temp">${d.TMP||'-'}°</div><div class="precip ${pcp!=='0mm'?'precip-blue':''}">${pcp}</div></div>`;
                         }
-                        targetContainer.innerHTML += `<div class="weather-section"><div class="loc-info"><span class="loc-name">${loc.n}</span><span class="loc-sub">${loc.sub}</span></div><div class="grid">${html}</div></div>`;
+                        html += `</div>`;
+                        
+                        targetContainer.innerHTML += `<div class="weather-location-group"><div class="loc-info"><span class="loc-name">${loc.n}</span><span class="loc-sub">${loc.sub}</span></div>${html}</div>`;
                     }
                 } catch(e) { log('Daily Error: ' + e.message); }
             }
         }
 
         async function initWeekly() {
-            const container1 = document.getElementById('weekly-list-1');
-            const container2 = document.getElementById('weekly-list-2');
-            if (document.getElementById('weekly-status-1')) document.getElementById('weekly-status-1').innerText = "更新中";
-            if (document.getElementById('weekly-status-2')) document.getElementById('weekly-status-2').innerText = "更新中";
-            container1.innerHTML = '';
-            container2.innerHTML = '';
-            
             const locs = [
                 { name: "济州市", sub: "Jeju City", regIdTemp: '11G00201', regIdLand: '11G00000', nx:52, ny:38 },
                 { name: "西归浦", sub: "Seogwipo", regIdTemp: '11G00401', regIdLand: '11G00000', nx:52, ny:32 },
@@ -464,6 +467,11 @@
                  midTmFc = todayStr + '1800'; 
             }
 
+            const container1 = document.getElementById('weekly-list-1');
+            const container2 = document.getElementById('weekly-list-2');
+            container1.innerHTML = '';
+            container2.innerHTML = '';
+
             for (const [index, loc] of locs.entries()) {
                 const targetContainer = index < 2 ? container1 : container2;
                 let combinedData = {};
@@ -475,15 +483,17 @@
                     if(jsonS.response && jsonS.response.header.resultCode === '00'){
                         const tempDays = {};
                         jsonS.response.body.items.item.forEach(it => {
-                            const date = it.fcstDate;
-                            if(!tempDays[date]) tempDays[date] = { min:100, max:-100, temps:[], hourlyData: Array(24).fill(null).map(() => ({})) };
-                            
-                            if(it.category === 'TMN') tempDays[date].min = parseFloat(it.fcstValue);
-                            if(it.category === 'TMX') tempDays[date].max = parseFloat(it.fcstValue);
-                            if(it.category === 'TMP') tempDays[date].temps.push(parseFloat(it.fcstValue));
+                            if (it.fcstDate === todayStr) {
+                                const date = it.fcstDate;
+                                if(!tempDays[date]) tempDays[date] = { min:100, max:-100, temps:[], hourlyData: Array(24).fill(null).map(() => ({})) };
+                                
+                                if(it.category === 'TMN') tempDays[date].min = parseFloat(it.fcstValue);
+                                if(it.category === 'TMX') tempDays[date].max = parseFloat(it.fcstValue);
+                                if(it.category === 'TMP') tempDays[date].temps.push(parseFloat(it.fcstValue));
 
-                            const h = parseInt(it.fcstTime.slice(0, 2));
-                            tempDays[date].hourlyData[h][it.category] = it.fcstValue;
+                                const h = parseInt(it.fcstTime.slice(0, 2));
+                                tempDays[date].hourlyData[h][it.category] = it.fcstValue;
+                            }
                         });
                         
                         for(let i=0; i<=3; i++){
@@ -581,7 +591,7 @@
 
                     html += `<div class="col"><div class="time">${label}<br><span style="font-size:9px; color:#aaa;">+${i}D</span></div><div class="icon">${icon}</div><div class="temp"><span class="high">${maxT}</span>/<span class="low">${minT}</span></div><div class="precip ${pop>0?'precip-blue':''}">${pop}%</div></div>`;
                 }
-                targetContainer.innerHTML += `<div class="weather-section"><div class="loc-info"><span class="loc-name">${loc.name}</span><span class="loc-sub">${loc.sub}</span></div><div class="grid weekly-grid">${html}</div></div>`;
+                targetContainer.innerHTML += `<div class="weather-section"><div class="loc-info"><span class="loc-name">${loc.n}</span><span class="loc-sub">${loc.sub}</span></div><div class="grid weekly-grid">${html}</div></div>`;
             }
         }
 
