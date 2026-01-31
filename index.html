@@ -7,112 +7,260 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        html, body {
-            height: auto;
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #007bff;
+            --background-color: #f8f9fa;
+            --surface-color: #ffffff;
+            --text-color: #333;
+            --muted-text-color: #6c757d;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
         }
-        body {
-            margin: 0; background-color: #f0f2f5;
-            font-family: 'Noto Sans SC', sans-serif;
+        
+        html {
+            scroll-behavior: smooth;
         }
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Center the cards */
-            padding: 20px;
-            gap: 20px;
-        }
-        .card {
-            width: 100%;
-            max-width: 900px; /* Max width for cards on desktop */
-            height: auto;
-            box-sizing: border-box;
-            display: flex; /* Use flexbox for layout */
-            flex-direction: column; /* Stack header and content vertically */
-        }
-        .card-inner {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Important to contain children */
-        }
-        .card-header {
-            background: #fff; padding: 12px 15px; border-bottom: 1px solid #eee;
-            font-weight: 800; font-size: 16px; color: #1a1a1a; display: flex; justify-content: space-between; align-items: center;
-            flex-shrink: 0; /* Prevent header from shrinking */
-        }
-        .refresh-icon {
-            cursor: pointer;
-            margin-left: 8px;
-            font-size: 14px;
-            color: #666;
-            transition: transform 0.3s ease;
-        }
-        .refresh-icon:hover {
-            transform: rotate(30deg);
-            color: #333;
-        }
-        .card-content {
-            flex-grow: 1; /* Allow content to fill available space */
-            overflow-y: auto; /* Allow scrolling within the content area if needed */
-            padding: 5px;
-        }
-        .badge { font-size: 11px; padding: 3px 8px; border-radius: 12px; background: #e8f5e9; color: #2e7d32; font-weight: bold; }
 
+        body {
+            margin: 0;
+            background-color: var(--background-color);
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--secondary-color);
+        }
+        .main-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+        }
+        .main-header p {
+            margin: 10px 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .info-section {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .section-header .icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            color: var(--primary-color);
+        }
+        .section-header .badge {
+            font-size: 0.8rem;
+            margin-left: auto;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .section-header .refresh-icon {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--muted-text-color);
+            transition: transform 0.3s ease, color 0.3s ease;
+            margin-left: 10px;
+        }
+        .section-header .refresh-icon:hover {
+            transform: rotate(90deg);
+            color: var(--primary-color);
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+        
         /* CCTV Section */
-        .video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-bottom: 1px solid #222; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .offline-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); color: #fff; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; font-weight: bold; z-index: 11; }
-        .live-tag { position: absolute; top: 10px; left: 10px; background: #ff5252; color: white; padding: 2px 6px; font-size: 10px; border-radius: 3px; z-index: 10; animation: blink 1.5s infinite; font-weight: bold; }
-        .vid-label { position: absolute; bottom: 8px; left: 10px; color: white; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 4px rgba(0,0,0,0.8); z-index: 10; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        @keyframes blink { 0%, 100% {opacity: 1;} 50% {opacity: 0.6;} }
+        .cctv-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        .video-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .offline-overlay {
+            font-weight: 500;
+            font-size: 1.1rem;
+            background: rgba(0,0,0,0.4);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .vid-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
 
         /* Weather Section */
-        .weather-section { padding: 15px 10px; border-bottom: 8px solid #f0f2f5; }
-        .weather-section:last-child { border-bottom: none; }
-        .loc-info { margin-bottom: 12px; }
-        .loc-name { font-size: 18px; font-weight: 900; color: #1a1a1a; }
-        .loc-sub { font-size: 12px; color: #666; margin-left: 5px; font-weight: 500; }
-
-        .grid { display: flex; flex-wrap: wrap; gap: 0; }
-        .col { width: 14.28%; display: flex; flex-direction: column; align-items: center; margin-bottom: 12px; }
-        .weekly-grid .col { width: 14.28%; margin-bottom: 18px; }
-
-        .time { font-size: 11px; color: #757575; font-weight: bold; margin-bottom: 3px; }
-        .icon { font-size: 22px; margin-bottom: 2px; }
-        .temp { font-size: 14px; font-weight: 900; color: #212121; }
-        .wind { font-size: 9px; color: #0288d1; font-weight: 600; margin-top: 1px; }
-        .precip { font-size: 10px; color: #546e7a; font-weight: 500; }
-        .high { color: #d32f2f; } .low { color: #1976d2; }
-        .precip-blue { color: #1e88e5; font-weight: bold; }
-
-        footer { text-align: center; padding: 20px 10px; font-size: 11px; color: #999; }
-        .flight-remark { font-size:11px; font-weight:bold; }
-        .flight-details {
-            flex-grow: 1;
-            flex-shrink: 1;
-            min-width: 0;
-            word-break: break-word;
+        .weather-grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
         }
-        .flight-status-container {
-            flex-shrink: 0;
-            margin-left: 10px; /* Add some space between details and status */
+        .loc-info { margin-bottom: 15px; }
+        .loc-name { font-size: 1.3rem; font-weight: 700; color: var(--text-color); }
+        .loc-sub { font-size: 0.9rem; color: var(--muted-text-color); margin-left: 8px; }
+        
+        .hourly-grid, .weekly-grid {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 15px; /* For scrollbar */
         }
-        /* Ensure flight ID and route can wrap if needed */
-        .flight-id-container, .flight-route {
-            word-break: break-word;
+        .hourly-col, .weekly-col {
+            flex: 0 0 75px; /* Fixed width for each column */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 0 5px;
         }
+        .time { font-size: 0.85rem; color: var(--muted-text-color); font-weight: bold; margin-bottom: 8px; }
+        .icon { font-size: 1.8rem; margin-bottom: 8px; }
+        .temp { font-size: 1.1rem; font-weight: 700; }
+        .high { color: #d32f2f; }
+        .low { color: #1976d2; }
+        .precip { font-size: 0.9rem; color: #546e7a; margin-top: 5px; }
+        .precip-blue { color: var(--secondary-color); font-weight: bold; }
+
+        /* Hallasan Trails */
+        .trail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .trail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--background-color);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .trail-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .trail-status {
+            font-size: 0.9rem;
+            font-weight: bold;
+            padding: 5px 12px;
+            border-radius: 15px;
+            white-space: nowrap;
+        }
+
+        /* Flights */
+        .flight-list { display: flex; flex-direction: column; gap: 12px; }
+        .flight-info-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--background-color);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .flight-details { flex-grow: 1; }
+        .airline-tag {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 5px;
+            margin-right: 8px;
+        }
+        .flight-route { font-size: 0.9rem; color: var(--muted-text-color); margin-top: 4px; }
+        .flight-status-container { text-align: right; }
+        .flight-time { font-size: 1.1rem; font-weight: 700; }
+        .flight-remark { font-size: 0.9rem; font-weight: bold; }
+
+        .placeholder-text {
+            padding: 40px;
+            text-align: center;
+            color: var(--muted-text-color);
+            font-size: 1rem;
+        }
+        
+        .app-footer {
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 0.9rem;
+            color: var(--muted-text-color);
+        }
+        
+        /* AdSense placeholder */
+        .adsense-placeholder {
+            background: #e9ecef;
+            text-align: center;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            color: var(--muted-text-color);
+            border: 1px dashed var(--border-color);
+        }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Card 1: CCTV -->
-        <div class="card">
-            <div class="card-inner" style="background:#000;">
-                <div class="card-header" style="background:#ff5252; color:#fff; border:none;">🔴 济州岛实况 (实时监控)</div>
+    <header class="main-header">
+        <h1>济州岛实时天气与旅行信息</h1>
+        <p>专为游客设计的实时天气、交通与实用信息聚合平台</p>
+    </header>
+
+    <main class="container">
+        <!-- CCTV Section -->
+        <section class="info-section" id="cctv">
+            <div class="section-header">
+                <span class="icon">📹</span>
+                <h2>济州岛实况 (实时监控)</h2>
+            </div>
                 <div class="card-content">
                     <div class="video-box">
                         <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
@@ -124,80 +272,69 @@
                         <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <!-- Card 2: Daily Forecast 1/2 -->
-        <div class="card">
-            <div class="card-inner">
-                <div class="card-header">☀️ 今日逐时预报 (1/2) <span class="badge" id="date-label"></span></div>
-                <div class="card-content" id="daily-list-1">
-                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取实时天气数据...</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Card 3: Daily Forecast 2/2 -->
-        <div class="card">
-            <div class="card-inner">
-                <div class="card-header">☀️ 今日逐时预报 (2/2) <span class="badge" id="date-label-2"></span></div>
-                <div class="card-content" id="daily-list-2">
-                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取实时天气数据...</div>
-                </div>
-            </div>
+        </section>
+        <div class="adsense-placeholder">
+            谷歌广告 (Google AdSense) 将在此处展示
         </div>
 
-        <!-- Card 4: Weekly Forecast 1/2 -->
-        <div class="card">
-            <div class="card-inner">
-                <div class="card-header">📅 未来10天长期预报 (1/2) <span class="badge" id="weekly-status-1">更新中</span></div>
-                <div class="card-content" id="weekly-list-1">
-                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取长期预报数据...</div>
-                </div>
+        <!-- Weather Section -->
+        <section class="info-section" id="weather">
+            <div class="section-header">
+                <span class="icon">☀️</span>
+                <h2>今日逐时预报</h2>
+                <span class="badge" id="date-label"></span>
             </div>
-        </div>
+            <div class="section-content weather-grid-container" id="daily-forecasts">
+                 <div id="daily-list-1"><div class="placeholder-text">正在获取实时天气数据...</div></div>
+                 <div id="daily-list-2"><div class="placeholder-text"></div></div>
+            </div>
+        </section>
+
+        <section class="info-section" id="weekly-weather">
+            <div class="section-header">
+                <span class="icon">📅</span>
+                <h2>未来10天长期预报</h2>
+            </div>
+            <div class="section-content weather-grid-container" id="weekly-forecasts">
+                <div id="weekly-list-1"><div class="placeholder-text">正在获取长期预报数据...</div></div>
+                <div id="weekly-list-2"><div class="placeholder-text"></div></div>
+            </div>
+        </section>
         
-        <!-- Card 5: Weekly Forecast 2/2 -->
-        <div class="card">
-            <div class="card-inner">
-                <div class="card-header">📅 未来10天长期预报 (2/2) <span class="badge" id="weekly-status-2">更新中</span></div>
-                <div class="card-content" id="weekly-list-2">
-                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取长期预报数据...</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Card 6: Hallasan Status -->
-        <div class="card">
-            <div class="card-inner">
-                <div class="card-header">🏔️ 汉拿山探访路管制信息 <span class="badge" id="hallasan-status">查询中</span></div>
-                <div class="card-content" id="hallasan-list">
-                    <div style="padding:20px; text-align:center; color:#999; font-size:12px;">正在获取实时管制信息...</div>
-                </div>
-                <footer>Data provided by Korea Meteorological Administration</footer>
-            </div>
+        <!-- AdSense Placeholder -->
+        <div class="adsense-placeholder">
+            谷歌广告 (Google AdSense) 将在此处展示
         </div>
 
-        <!-- Card 7: Flight Departures -->
-        <div class="card">
-            <div class="card-inner">
-                <div class="card-header">✈️ 国际线出发信息 <span class="badge" id="flight-dep-status">更新中</span> <span class="refresh-icon" onclick="refreshDepartureFlights()">🔄</span></div>
-                <div class="card-content" id="flight-list-dep">
-                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取出发信息...</div>
-                </div>
-                 <footer>Data provided by Korea Airports Corporation</footer>
+        <!-- Hallasan Trails Section -->
+        <section class="info-section" id="hallasan">
+            <div class="section-header">
+                <span class="icon">🏔️</span>
+                <h2>汉拿山探访路管制信息</h2>
+                <span class="badge" id="hallasan-status">查询中</span>
             </div>
-        </div>
-        
-        <!-- Card 8: Flight Arrivals -->
-        <div class="card">
-            <div class="card-inner">
-                <div class="card-header">✈️ 国际线到达信息 <span class="badge" id="flight-arr-status">更新中</span> <span class="refresh-icon" onclick="refreshArrivalFlights()">🔄</span></div>
-                <div class="card-content" id="flight-list-arr">
-                    <div style="padding:40px; text-align:center; color:#999; font-size:12px;">正在获取到达信息...</div>
-                </div>
-                 <footer>Data provided by Korea Airports Corporation</footer>
+            <div class="section-content" id="hallasan-list">
+                <div class="placeholder-text">正在获取实时管制信息...</div>
             </div>
-        </div>
+        </section>
+
+        <!-- Flights Section -->
+        <section class="info-section" id="flights">
+            <div class="section-header">
+                <span class="icon">✈️</span>
+                <h2>国际线航班延误/取消信息</h2>
+            </div>
+            <div class="section-content">
+                <h3>出发 (Departures) <span class="refresh-icon" onclick="refreshDepartureFlights()">🔄</span></h3>
+                <div class="flight-list" id="flight-list-dep">
+                    <div class="placeholder-text">正在获取出发信息...</div>
+                </div>
+                <h3 style="margin-top: 30px;">到达 (Arrivals) <span class="refresh-icon" onclick="refreshArrivalFlights()">🔄</span></h3>
+                <div class="flight-list" id="flight-list-arr">
+                    <div class="placeholder-text">正在获取到达信息...</div>
+                </div>
+            </div>
+        </section>
     </div>
     
     <script>
@@ -449,6 +586,7 @@
         }
 
         function initCCTV() {
+            // CCTV functionality is temporarily disabled pending a fix for HLS proxying.
         }
         
         async function initHallasan() {
