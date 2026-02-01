@@ -11,7 +11,7 @@ async function handleRequest(event) {
 
   // Explicitly serve the HTML for the root path by fetching it from GitHub
   if (pathname === '/') {
-    const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html';
+    const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html?v=' + Date.now();
     const response = await fetch(githubUrl);
     return new Response(response.body, {
       headers: { 'Content-Type': 'text/html;charset=UTF-8' },
