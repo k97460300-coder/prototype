@@ -24,12 +24,12 @@ async function handleRequest(event) {
     headers.set('Expires', '0');
     headers.set('Content-Security-Policy', 
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; " +
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
         "font-src 'self' https://fonts.gstatic.com; " +
-        "connect-src *; " +
+        "connect-src * https://www.google-analytics.com https://www.googletagmanager.com; " +
         "media-src 'self' 'blob:' http://211.114.96.121:1935 http://119.65.216.155:1935; " +
-        "img-src 'self' data:;"
+        "img-src 'self' data: https://www.googletagmanager.com;"
     );
 
     return new Response(response.body, { headers });
