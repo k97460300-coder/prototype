@@ -1,3 +1,726 @@
+const htmlContent = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-5GPGKT9B');</script>
+    <!-- End Google Tag Manager -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>济州岛实时天气与旅行信息</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #007bff;
+            --background-color: #f8f9fa;
+            --surface-color: #ffffff;
+            --text-color: #333;
+            --muted-text-color: #6c757d;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+        }
+        
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            background-color: var(--background-color);
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .main-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 900;
+        }
+        .main-header p {
+            margin: 10px 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .info-section {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .section-header .icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            color: var(--primary-color);
+        }
+        .section-header .badge {
+            font-size: 0.8rem;
+            margin-left: auto;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+         .section-header .refresh-icon {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--muted-text-color);
+            transition: transform 0.3s ease;
+            margin-left: 10px;
+        }
+        .section-header .refresh-icon:hover {
+            transform: rotate(90deg);
+            color: var(--primary-color);
+        }
+        .section-content { padding: 20px; }
+        
+        .cctv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .video-box {
+            position: relative; width: 100%; aspect-ratio: 16/9;
+            background: #000; border-radius: 8px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; color: white;
+        }
+        .vid-label {
+            position: absolute; bottom: 10px; left: 10px;
+            font-weight: bold; font-size: 1rem; text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+        }
+        .live-tag {
+            position: absolute; top: 10px; left: 10px; background: #ff5252; color: white;
+            padding: 2px 6px; font-size: 10px; border-radius: 3px; z-index: 10;
+            animation: blink 1.5s infinite; font-weight: bold;
+        }
+        @keyframes blink { 0%, 100% {opacity: 1;} 50% {opacity: 0.6;} }
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        .weather-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        .weather-location-group { margin-bottom: 20px; }
+        .loc-info { margin-bottom: 15px; }
+        .loc-name { font-size: 1.3rem; font-weight: 700; }
+        .loc-sub { font-size: 0.9rem; color: var(--muted-text-color); margin-left: 8px; }
+        .hourly-grid { display: flex; overflow-x: auto; padding-bottom: 15px; }
+        .hourly-col { flex: 0 0 70px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 5px; }
+        .time { font-size: 0.85rem; color: var(--muted-text-color); font-weight: bold; margin-bottom: 8px; }
+        .icon { font-size: 1.8rem; margin-bottom: 8px; }
+        .temp { font-size: 1.1rem; font-weight: 700; }
+        .precip { font-size: 0.9rem; color: #546e7a; margin-top: 5px; }
+        .precip-blue { color: var(--secondary-color); font-weight: bold; }
+
+        .weekly-grid { display: flex; overflow-x: auto; padding-bottom: 15px; }
+        .weekly-col { flex: 0 0 75px; text-align: center; }
+        .high { color: #d32f2f; } .low { color: #1976d2; }
+        
+        .trail-list { display: flex; flex-direction: column; gap: 10px; }
+        .trail-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--background-color); padding: 15px; border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .trail-name { font-weight: 700; font-size: 1.1rem; }
+        .trail-status { font-size: 0.9rem; font-weight: bold; padding: 5px 12px; border-radius: 15px; }
+
+        .flight-list { display: flex; flex-direction: column; gap: 12px; }
+        .flight-info-item {
+            display: flex; align-items: center; padding: 12px;
+            background: var(--background-color); border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .flight-details { flex-grow: 1; }
+        .airline-tag { background-color: var(--primary-color); color: white; font-size: 0.8rem; font-weight: bold; padding: 3px 8px; border-radius: 5px; margin-right: 8px;}
+        .flight-route { font-size: 0.9rem; color: var(--muted-text-color); margin-top: 4px; }
+        .flight-status-container { text-align: right; }
+        .flight-time { font-size: 1.1rem; font-weight: 700; }
+        .flight-remark { font-size: 0.9rem; font-weight: bold; }
+
+        .placeholder-text { padding: 40px; text-align: center; color: var(--muted-text-color); }
+        .adsense-placeholder {
+            background: #e9ecef; text-align: center; padding: 40px 20px;
+            margin: 25px 0; border-radius: var(--border-radius); font-size: 1rem;
+            color: var(--muted-text-color); border: 1px dashed var(--border-color);
+        }
+        .app-footer { text-align: center; padding: 30px 20px; font-size: 0.9rem; color: var(--muted-text-color); }
+
+        .global-refresh-button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color: 0.3s ease;
+        }
+
+        .global-refresh-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .main-header { padding: 30px 15px; }
+            .main-header h1 { font-size: 2rem; }
+            .main-header p { font-size: 1rem; }
+            .container { padding: 15px; }
+            .section-header { font-size: 1.3rem; padding: 12px 15px; }
+            .section-header .icon { font-size: 1.5rem; margin-right: 10px; }
+            .section-content { padding: 15px; }
+
+            .cctv-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+            .weather-grid-container {
+                grid-template-columns: 1fr; /* Stack weather cards on smaller screens */
+            }
+            .weather-location-group { margin-bottom: 15px; }
+
+            .flight-info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+            .flight-details { width: 100%; margin-bottom: 5px; }
+            .flight-route { margin-left: 0; margin-top: 5px; }
+            .flight-status-container { width: 100%; text-align: left; margin-top: 5px; }
+            .global-refresh-button { font-size: 0.9rem; padding: 8px 15px; }
+        }
+
+        @media (max-width: 480px) {
+            .main-header h1 { font-size: 1.8rem; }
+            .main-header p { font-size: 0.9rem; }
+            .section-header h2 { font-size: 1.1rem; }
+            .section-header .icon { font-size: 1.3rem; }
+            .vid-label { font-size: 0.9rem; }
+            .live-tag { font-size: 9px; padding: 1px 4px; }
+
+            .hourly-col { flex: 0 0 60px; }
+            .weekly-col { flex: 0 0 65px; }
+
+            .trail-item { padding: 10px; }
+            .trail-name { font-size: 1rem; }
+            .trail-status { font-size: 0.8rem; padding: 4px 10px; }
+        }
+
+        /* Accordion Specific Styles */
+        .accordion-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .accordion-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+            margin-left: 10px;
+        }
+        .accordion-content {
+            display: none; /* Hidden by default */
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            background-color: #fcfcfc; /* Slightly different background for content */
+        }
+        .accordion-content ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .accordion-content ul li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .accordion-content ul li:last-child {
+            border-bottom: none;
+        }
+        .accordion-content h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+        .accordion-content p {
+            margin-bottom: 10px;
+        }
+
+        /* Festival Section Styles */
+        .festival-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .festival-item {
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease-in-out;
+        }
+        .festival-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.08);
+        }
+        .festival-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .festival-content {
+            padding: 15px;
+        }
+        .festival-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+        .festival-intro {
+            font-size: 0.9rem;
+            color: var(--muted-text-color);
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5GPGKT9B"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <header class="main-header">
+        <h1>济州岛实时旅行信息</h1>
+        <p>专为游客设计的实时天气、交通与实用信息聚合平台</p>
+        <button class="global-refresh-button" onclick="refreshAllSections()">全部刷新</button>
+    </header>
+
+    <main class="container">
+        <section class="info-section" id="cctv">
+            <div class="section-header">
+                <span class="icon">📹</span><h2>济州岛实况 (实时监控)</h2><span class="refresh-icon" onclick="refreshSection('cctv')">🔄</span>
+            </div>
+            <div class="section-content">
+                <div class="cctv-grid">
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏝️ 牛岛 (天津港)</div><video id="v1" autoplay muted playsinline></video></div>
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏔️ 汉拿山 (御势岳)</div><video id="v2" autoplay muted playsinline></video></div>
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🛣️ 1100高地 (1100公路)</div><video id="v3" autoplay muted playsinline></video></div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="info-section" id="weather">
+            <div class="section-header">
+                <span class="icon">☀️</span><h2>今日逐时预报</h2><span class="badge" id="date-label"></span><span class="refresh-icon" onclick="refreshSection('weather')">🔄</span>
+            </div>
+            <div class="section-content weather-grid-container" id="daily-forecasts">
+                 <div class="placeholder-text">正在获取实时天气数据...</div>
+            </div>
+        </section>
+
+        <section class="info-section" id="weekly-weather">
+            <div class="section-header">
+                <span class="icon">📅</span><h2>未来10天长期预报</h2><span class="refresh-icon" onclick="refreshSection('weekly-weather')">🔄</span>
+            </div>
+            <div class="section-content weather-grid-container" id="weekly-forecasts">
+                <div class="placeholder-text">正在获取长期预报数据...</div>
+            </div>
+        </section>
+        
+
+        <section class="info-section" id="hallasan">
+            <div class="section-header">
+                <span class="icon">🏔️</span><h2>汉拿山探访路管制信息</h2><span class="badge" id="hallasan-status">查询中</span><span class="refresh-icon" onclick="refreshSection('hallasan')">🔄</span>
+            </div>
+            <div class="section-content" id="hallasan-list">
+                <div class="placeholder-text">正在获取实时管制信息...</div>
+            </div>
+        </section>
+
+        <section class="info-section" id="festivals">
+            <div class="section-header">
+                <span class="icon">🎉</span><h2>济州节庆活动</h2><span class="refresh-icon" onclick="refreshSection('festivals')">🔄</span>
+            </div>
+            <div class="section-content" id="festivals-list">
+                <div class="placeholder-text">正在获取节庆活动信息...</div>
+            </div>
+        </section>
+
+        <section class="info-section" id="flights">
+            <div class="section-header">
+                <span class="icon">✈️</span><h2>国际线航班变动信息</h2>
+            </div>
+            <div class="section-content">
+                <h3>出发 (Departures) <span class="refresh-icon" onclick="fetchFlightData('dep')">🔄</span></h3>
+                <div class="flight-list" id="flight-list-dep"><div class="placeholder-text">正在获取出发信息...</div></div>
+                <h3 style="margin-top: 30px;">到达 (Arrivals) <span class="refresh-icon" onclick="fetchFlightData('arr')">🔄</span></h3>
+                <div class="flight-list" id="flight-list-arr"><div class="placeholder-text">正在获取到达信息...</div></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>数据来源: 韩国气象厅 (KMA), 韩国机场集团 (KAC), 济州特别自治道, VisitJeju</p>
+        <p>&copy; 2026 济州岛实时信息. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        function log(msg) { console.log(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg); }
+
+        const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce';
+        
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth()+1).padStart(2,'0'); 
+        const dd = String(now.getDate()).padStart(2,'0');
+        const todayStr = yyyy + mm + dd;
+        
+        document.getElementById('date-label').innerText = `${mm}月${dd}日`;
+
+        function getFormatDate(date) {
+            const y = date.getFullYear();
+            const m = ('0' + (date.getMonth() + 1)).slice(-2);
+            const d = ('0' + date.getDate()).slice(-2);
+            return y + '' + m + '' + d;
+        }
+
+        async function initDaily() {
+            const container = document.getElementById('daily-forecasts');
+            container.innerHTML = '';
+            const locs = [
+                {n:"济州市 (莲洞)", sub:"Yeon-dong", x:52, y:38}, {n:"西归浦 (中文)", sub:"Jungmun", x:52, y:32},
+                {n:"汉拿山", sub:"Halla Mtn.", x:52, y:35}, {n:"牛岛", sub:"Udo Island", x:60, y:38}
+            ];
+            let baseDate = todayStr, baseTime = "0200";
+            if (now.getHours() < 3) {
+                 const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
+                 baseDate = getFormatDate(yD);
+                 baseTime = "2300";
+            }
+            for (const loc of locs) {
+                try {
+                    const apiUrl = `/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`; // Call worker endpoint
+                    const res = await fetch(apiUrl);
+                    const json = await res.json();
+                    const hourly = {};
+                    if(json.response && json.response.header.resultCode === '00'){
+                        json.response.body.items.item.forEach(i => {
+                            if (i.fcstDate === todayStr) {
+                                const h = parseInt(i.fcstTime.slice(0,2));
+                                if(h>=9 && h<=22) {
+                                    if(!hourly[h]) hourly[h] = {};
+                                    hourly[h][i.category] = i.fcstValue;
+                                }
+                            }
+                        });
+                        let html = `<div class="hourly-grid">`;
+                        for(let h=9; h<=22; h++) {
+                            const d = hourly[h] || {};
+                            let icon = '☀️';
+                            const pty=parseInt(d.PTY||0), sky=parseInt(d.SKY||1);
+                            if(pty>0) icon=(pty===3)?'❄️':'🌧️'; else if(sky>8) icon='☁️'; else if(sky>5) icon='⛅';
+                            if(h>=19 && (icon==='☀️'||icon==='⛅')) icon='🌙';
+                            let pcp = d.PCP || '0';
+                            if (pcp === "강수없음") pcp = "0mm"; else if (pcp.includes("미만")) pcp = "~1mm"; else if (!pcp.endsWith("mm")) pcp += "mm";
+                            html += `<div class="hourly-col"><div class="time">${h}h</div><div class="icon">${icon}</div><div class="temp">${d.TMP||'-'}°</div><div class="precip ${pcp!=='0mm'?'precip-blue':''}">${pcp}</div><div style="font-size:10px; color:#555;">${d.WSD||'-'}m/s</div></div>`;
+                        }
+                        html += `</div>`;
+                        const locationDiv = document.createElement('div');
+                        locationDiv.className = 'weather-location-group';
+                        locationDiv.innerHTML = `<div class="loc-info"><span class="loc-name">${loc.n}</span><span class="loc-sub">${loc.sub}</span></div>${html}`;
+                        container.appendChild(locationDiv);
+                    }
+                } catch(e) { log(`Daily Error for ${loc.n}: ${e.message}`); }
+            }
+        }
+
+        async function initWeekly() {
+            const container = document.getElementById('weekly-forecasts');
+            container.innerHTML = '';
+            const locs = [
+                { name: "济州市", sub: "Jeju City", regIdTemp: '11G00201', regIdLand: '11G00000', nx: 52, ny: 38 },
+                { name: "西归浦", sub: "Seogwipo", regIdTemp: '11G00401', regIdLand: '11G00000', nx: 52, ny: 32 },
+                { name: "汉拿山", sub: "Halla Mtn.", regIdTemp: '11G00401', regIdLand: '11G00000', nx: 52, ny: 35 },
+                { name: "牛岛", sub: "Udo Island", regIdTemp: '11G00302', regIdLand: '11G00000', nx: 60, ny: 38 }
+            ];
+
+            for (const loc of locs) {
+                let combinedData = {};
+                
+                try {
+                    let baseDate = todayStr, baseTime = "0200";
+                    if (now.getHours() < 3) {
+                        const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
+                        baseDate = getFormatDate(yD);
+                        baseTime = "2300";
+                    }
+                    const urlS = `/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.nx}&ny=${loc.ny}`; // Call worker endpoint
+                    const resS = await fetch(urlS);
+                    const jsonS = await resS.json();
+                    
+                    if (jsonS.response && jsonS.response.header.resultCode === '00') {
+                        const dailyData = {};
+                        jsonS.response.body.items.item.forEach(it => {
+                            const date = it.fcstDate;
+                            if (!dailyData[date]) dailyData[date] = { TMN: 100, TMX: -100, SKY: [], PTY: [] };
+                            if (it.category === 'TMN') dailyData[date].TMN = Math.min(dailyData[date].TMN, parseFloat(it.fcstValue));
+                            if (it.category === 'TMX') dailyData[date].TMX = Math.max(dailyData[date].TMX, parseFloat(it.fcstValue));
+                            if (it.category === 'SKY') dailyData[date].SKY.push(it.fcstValue);
+                            if (it.category === 'PTY') dailyData[date].PTY.push(it.fcstValue);
+                        });
+
+                        for(let i=0; i < 3; i++) {
+                            const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
+                            const dStr = getFormatDate(d);
+                            const data = dailyData[dStr];
+                            if(data) {
+                                let wf = "맑음";
+                                if (data.PTY.some(p => p > 0)) wf = "비/눈";
+                                else if (data.SKY.some(s => s > 5)) wf = "흐림";
+                                combinedData[i] = { min: data.TMN, max: data.TMX, wf: wf, pop: 0 };
+                            }
+                        }
+                    }
+                } catch(e) { log(`Weekly (Short) Error for ${loc.name}: ${e.message}`); }
+
+                try {
+                    let h = now.getHours(), m = now.getMinutes(), midTmFc;
+                    if (h < 6 || (h === 6 && m < 15)) { const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1); midTmFc = getFormatDate(yD) + '1800';} 
+                    else if (h < 18 || (h === 18 && m < 15)) { midTmFc = todayStr + '0600'; } 
+                    else { midTmFc = todayStr + '1800'; }
+
+                    const urlT = `/weather/mid-temp?regId=${loc.regIdTemp}&tmFc=${midTmFc}`; // Call worker endpoint
+                    const urlL = `/weather/mid-land?regId=${loc.regIdLand}&tmFc=${midTmFc}`; // Call worker endpoint
+                    
+                    const resT = await fetch(urlT); const jsonT = await resT.json();
+                    const resL = await fetch(urlL); const jsonL = await resL.json();
+                    if(jsonT.response && jsonL.response && jsonT.response.header.resultCode === '00' && jsonL.response.header.resultCode === '00') {
+                        const t = jsonT.response.body.items.item[0];
+                        const l = jsonL.response.body.items.item[0];
+                        for(let i=3; i<=10; i++) {
+                            let wf = l['wf'+i] || "맑음";
+                            let pop = l['rnSt'+i] || 0;
+                            combinedData[i] = { min: t['taMin'+i], max: t['taMax'+i], wf: wf, pop: pop };
+                        }
+                    }
+                } catch(e) { log(`Weekly (Mid) Error for ${loc.name}: ${e.message}`); }
+                
+                let html = `<div class="weekly-grid">`;
+                for(let i=0; i<=10; i++) {
+                    const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
+                    const label = (d.getMonth()+1) + '/' + d.getDate();
+                    const w = combinedData[i] || { wf: '-', min: '-', max: '-', pop: '-' };
+                    let icon = '☀️';
+                    if(w.wf.includes('흐림')) icon='☁️'; else if(w.wf.includes('구름')) icon='⛅'; else if(w.wf.includes('비')) icon='🌧️'; else if(w.wf.includes('눈')) icon='❄️';
+                    const minTemp = w.min === 100 ? '-' : w.min;
+                    const maxTemp = w.max === -100 ? '-' : w.max;
+                    html += `<div class="weekly-col"><div class="time">${label}</div><div class="icon">${icon}</div><div class="temp"><span class="high">${maxTemp}°</span> / <span class="low">${minTemp}°</span></div><div class="precip ${w.pop>0?'precip-blue':''}">${w.pop}%</div></div>`;
+                }
+                html += `</div>`;
+                const locationDiv = document.createElement('div');
+                locationDiv.className = 'weather-location-group';
+                locationDiv.innerHTML = `<div class="loc-info"><span class="loc-name">${loc.name}</span><span class="loc-sub">${loc.sub}</span></div>${html}`;
+                container.appendChild(locationDiv);
+            }
+        }
+
+        function initCCTV() {
+            if(Hls.isSupported()) {
+                const streams = [
+                    { id: 'v1', url: 'http://211.114.96.121:1935/jejusi7/11-24.stream/playlist.m3u8' },
+                    { id: 'v2', url: 'http://119.65.216.155:1935/live/cctv03.stream_360p/playlist.m3u8' },
+                    { id: 'v3', url: 'http://119.65.216.155:1935/live/cctv05.stream_360p/playlist.m3u8' } 
+                ];
+                streams.forEach(s => {
+                    const video = document.getElementById(s.id);
+                    if(video) {
+                        const hls = new Hls();
+                        hls.loadSource(`/cctv/?url=${encodeURIComponent(s.url)}`); // Call worker endpoint
+                        hls.attachMedia(video);
+                    }
+                });
+            }
+        }
+        
+        async function initHallasan() {
+            const container = document.getElementById('hallasan-list');
+            const statusSpan = document.getElementById('hallasan-status');
+            try {
+                const res = await fetch('/hallasan'); // Call worker endpoint
+                if (!res.ok) throw new Error("Worker fetch failed: " + res.status);
+                const text = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const trails = [
+                    { id: '어리목', name: '御里牧' }, { id: '영실', name: '灵室' },
+                    { id: '어승생악', name: '御乘生岳' }, { id: '돈내코', name: '顿乃克' },
+                    { id: '석굴암', name: '石窟庵' }, { id: '관음사', name: '观音寺' },
+                    { id: '성판악', name: '城板岳' }
+                ];
+                const getStatusCN = (st) => {
+                    if(st === '정상') return { t:'🟢 正常通行', c:'#4caf50' }; 
+                    if(st === '부분') return { t:'🟡 部分管制', c:'#ff9800' };
+                    if(st === '통제') return { t:'🔴 全面管制', c:'#f44336' }; 
+                    return { t:'⚪ 信息未知', c:'#999' }; 
+                };
+                let html = `<div class="trail-list">`; 
+                const dlList = doc.querySelectorAll('.main-visit-list');
+                trails.forEach(t => {
+                    let st = '확인불가';
+                    let targetDl = Array.from(dlList).find(dl => dl.textContent.includes(t.id.trim()));
+                    if (targetDl) {
+                        const statusText = targetDl.querySelector('.situation')?.textContent || targetDl.textContent;
+                        if (statusText.includes('정상')) st = '정상';
+                        else if (statusText.includes('통제')) st = '통제';
+                        else if (statusText.includes('부분')) st = '부분';
+                    }
+                    const info = getStatusCN(st);
+                    html += `<div class="trail-item"><span class="trail-name">${t.name}</span><span class="trail-status" style="color:${info.c}; background:${info.c}1A; border: 1px solid ${info.c}30;">${info.t}</span></div>`;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+                if(statusSpan) statusSpan.innerText = "已更新";
+            } catch (e) {
+                log('Hallasan Error: ' + e.message);
+                if(statusSpan) statusSpan.innerText = "错误";
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
+            }
+        }
+
+        async function fetchFlightData(flightType) {
+            const container = document.getElementById(flightType === 'dep' ? 'flight-list-dep' : 'flight-list-arr');
+            try {
+                const apiUrl = `/flights/${flightType}?searchday=${todayStr}`; // Call worker endpoint
+                const res = await fetch(apiUrl);
+                const text = await res.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "text/xml");
+                if (xmlDoc.querySelector("resultCode")?.textContent !== '00') {
+                    throw new Error(xmlDoc.querySelector("resultMsg")?.textContent || 'Unknown API Error');
+                }
+                const items = xmlDoc.querySelectorAll("item");
+                let relevantFlights = [];
+                items.forEach(item => {
+                    const rmk = item.querySelector("rmk")?.textContent || '';
+                    if (rmk.includes('지연') || rmk.includes('결항')) {
+                        relevantFlights.push({
+                            airline: item.querySelector("airline")?.textContent || '',
+                            flightId: item.querySelector("flightid")?.textContent || '',
+                            depAirport: item.querySelector("depAirport")?.textContent || '',
+                            arrAirport: item.querySelector("arrAirport")?.textContent || '',
+                            scheduledatetime: item.querySelector("scheduledatetime")?.textContent || '',
+                            rmk: rmk
+                        });
+                    }
+                });
+                if (relevantFlights.length > 0) {
+                    container.innerHTML = relevantFlights.map(f => createFlightItemHTML(f, flightType)).join('');
+                } else {
+                    container.innerHTML = `<div class="placeholder-text">目前没有延误或取消的国际航班。</div>`;
+                }
+            } catch (e) {
+                log(`Flight Status Error (${flightType}): ${e.message}`);
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
+            }
+        }
+        
+        function createFlightItemHTML(flight, type) {
+            const rmk = flight.rmk || '';
+            const status = rmk.includes('지연') ? { t: '延误', c: '#ff9800' } : 
+                           rmk.includes('결항') ? { t: '取消', c: '#f44336' } :
+                           { t: rmk, c: '#2e7d32' };
+            const route = type === 'dep' ? `目的地: ${flight.arrAirport}` : `出发地: ${flight.depAirport}`;
+            return `<div class="flight-info-item"><div class="flight-details"><div class="airline-tag">${flight.airline}</div>${flight.flightId}</div><div class="flight-route">${route}</div><div class="flight-status-container"><div class="flight-time">${flight.scheduledatetime.slice(-4, -2)}:${flight.scheduledatetime.slice(-2)}</div><span class="flight-remark" style="color:${status.c};">${status.t}</span></div></div>`;
+        }
+
+        async function initFestivals() {
+            const container = document.getElementById('festivals-list');
+            try {
+                const res = await fetch('/festivals');
+                const data = await res.json();
+                if (data.result === '200' && data.items && data.items.length > 0) {
+                    let html = '<div class="festival-grid">';
+                    data.items.forEach(item => {
+                        const photoUrl = item.repPhoto?.photoid?.imgpath || 'https://via.placeholder.com/400x300?text=No+Image';
+                        html += `
+                            <div class="festival-item">
+                                <img src="${photoUrl}" alt="${item.title}" class="festival-img">
+                                <div class="festival-content">
+                                    <h3 class="festival-title">${item.title}</h3>
+                                    <p class="festival-intro">${item.introduction || ''}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div class="placeholder-text">${data.resultMessage || '当前没有节庆活动信息。'}</div>`;
+                }
+            } catch (e) {
+                log(`Festivals Error: ${e.message}`);
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
+            }
+        }
+        
+        // Global refresh function
+        function refreshSection(sectionId) {
+            switch(sectionId) {
+                case 'cctv': initCCTV(); break;
+                case 'weather': initDaily(); break;
+                case 'weekly-weather': initWeekly(); break;
+                case 'hallasan': initHallasan(); break;
+                case 'festivals': initFestivals(); break;
+                case 'flights-dep': fetchFlightData('dep'); break;
+                case 'flights-arr': fetchFlightData('arr'); break;
+                default: console.warn('Unknown sectionId for refresh:', sectionId);
+            }
+        }
+        function refreshAllSections() {
+            refreshSection('cctv');
+            refreshSection('weather');
+            refreshSection('weekly-weather');
+            refreshSection('hallasan');
+            refreshSection('festivals');
+            refreshSection('flights-dep');
+            refreshSection('flights-arr');
+        }
+        
+        // --- Execute all initialization functions ---
+        refreshAllSections();
+    </script>
+    <!-- Cloudflare Pages Build Trigger -->
+</body>
+</html>`;
 
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event).catch(
@@ -14,14 +737,8 @@ async function handleRequest(event) {
     return new Response(null, { status: 204 });
   }
 
-  // For a pure Worker project, we must handle the root path ourselves.
-  // Fetch the latest index.html from the main branch on GitHub.
   if (pathname === '/') {
-    const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html?v=' + Date.now();
-    const response = await fetch(githubUrl);
-    
-    // Add security and cache-busting headers
-    const headers = new Headers(response.headers);
+    const headers = new Headers();
     headers.set('Content-Type', 'text/html;charset=UTF-8');
     headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     headers.set('Pragma', 'no-cache');
@@ -36,7 +753,7 @@ async function handleRequest(event) {
         "img-src 'self' data: https://www.googletagmanager.com;"
     );
 
-    return new Response(response.body, { headers });
+    return new Response(htmlContent, { headers });
   }
 
   let targetUrl;
@@ -67,8 +784,7 @@ async function handleRequest(event) {
   }
   else if (pathname === '/festivals') {
     // VISIT_JEJU_API_KEY is a global variable from secrets in the deployed environment
-    // Category 'c4' is typically for festivals/events, needs to be confirmed.
-    targetUrl = `http://api.visitjeju.net/vsjApi/contents/searchlist?apiKey=${VISIT_JEJU_API_KEY}&locale=cn&category=c4`;
+    targetUrl = `http://api.visitjeju.net/vsjApi/contents/searchList?apiKey=${VISIT_JEJU_API_KEY}&locale=cn`;
   }
   else if (pathname.startsWith('/flights/')) {
     const type = pathname.split('/')[2];
