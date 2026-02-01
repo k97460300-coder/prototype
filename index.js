@@ -1,4 +1,3 @@
-
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event).catch(
     (err) => new Response(err.stack, { status: 500 })
@@ -9,6 +8,9 @@ async function handleRequest(event) {
   const request = event.request;
   const url = new URL(request.url);
   const pathname = url.pathname;
+
+  // This worker should ONLY handle API calls.
+  // The static index.html is served by the [site] configuration in wrangler.toml
 
   let targetUrl;
   const newHeaders = new Headers(request.headers);
@@ -48,11 +50,10 @@ async function handleRequest(event) {
   else if (pathname.startsWith('/cctv/')) {
     targetUrl = url.searchParams.get('url');
     if (!targetUrl) return new Response('CCTV URL not provided', { status: 400 });
-    // Disguise as a regular browser to bypass anti-hotlinking
     newHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
   }
   else {
-    return new Response('API endpoint not found.', { status: 404 });
+    return new Response('API endpoint not found. This request should have been served a static file.', { status: 404 });
   }
 
   // --- Generic Proxy Logic ---
