@@ -166,6 +166,22 @@
         }
         .app-footer { text-align: center; padding: 30px 20px; font-size: 0.9rem; color: var(--muted-text-color); }
 
+        .global-refresh-button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .global-refresh-button:hover {
+            background-color: #0056b3;
+        }
+
         /* Responsive Adjustments */
         @media (max-width: 768px) {
             .main-header { padding: 30px 15px; }
@@ -192,6 +208,7 @@
             .flight-details { width: 100%; margin-bottom: 5px; }
             .flight-route { margin-left: 0; margin-top: 5px; }
             .flight-status-container { width: 100%; text-align: left; margin-top: 5px; }
+            .global-refresh-button { font-size: 0.9rem; padding: 8px 15px; }
         }
 
         @media (max-width: 480px) {
@@ -289,15 +306,20 @@
     </style>
 </head>
 <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5GPGKT9B"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <header class="main-header">
         <h1>济州岛实时旅行信息</h1>
         <p>专为游客设计的实时天气、交通与实用信息聚合平台</p>
+        <button class="global-refresh-button" onclick="refreshAllSections()">全部刷新</button>
     </header>
 
     <main class="container">
         <section class="info-section" id="cctv">
             <div class="section-header">
-                <span class="icon">📹</span><h2>济州岛实况 (实时监控)</h2>
+                <span class="icon">📹</span><h2>济州岛实况 (实时监控)</h2><span class="refresh-icon" onclick="refreshSection('cctv')">🔄</span>
             </div>
             <div class="section-content">
                 <div class="cctv-grid">
@@ -312,7 +334,7 @@
 
         <section class="info-section" id="weather">
             <div class="section-header">
-                <span class="icon">☀️</span><h2>今日逐时预报</h2><span class="badge" id="date-label"></span>
+                <span class="icon">☀️</span><h2>今日逐时预报</h2><span class="badge" id="date-label"></span><span class="refresh-icon" onclick="refreshSection('weather')">🔄</span>
             </div>
             <div class="section-content weather-grid-container" id="daily-forecasts">
                  <div class="placeholder-text">正在获取实时天气数据...</div>
@@ -321,7 +343,7 @@
 
         <section class="info-section" id="weekly-weather">
             <div class="section-header">
-                <span class="icon">📅</span><h2>未来10天长期预报</h2>
+                <span class="icon">📅</span><h2>未来10天长期预报</h2><span class="refresh-icon" onclick="refreshSection('weekly-weather')">🔄</span>
             </div>
             <div class="section-content weather-grid-container" id="weekly-forecasts">
                 <div class="placeholder-text">正在获取长期预报数据...</div>
@@ -332,7 +354,7 @@
 
         <section class="info-section" id="hallasan">
             <div class="section-header">
-                <span class="icon">🏔️</span><h2>汉拿山探访路管制信息</h2><span class="badge" id="hallasan-status">查询中</span>
+                <span class="icon">🏔️</span><h2>汉拿山探访路管制信息</h2><span class="badge" id="hallasan-status">查询中</span><span class="refresh-icon" onclick="refreshSection('hallasan')">🔄</span>
             </div>
             <div class="section-content" id="hallasan-list">
                 <div class="placeholder-text">正在获取实时管制信息...</div>
@@ -341,7 +363,7 @@
 
         <section class="info-section" id="festivals">
             <div class="section-header">
-                <span class="icon">🎉</span><h2>济州节庆活动</h2>
+                <span class="icon">🎉</span><h2>济州节庆活动</h2><span class="refresh-icon" onclick="refreshSection('festivals')">🔄</span>
             </div>
             <div class="section-content" id="festivals-list">
                 <div class="placeholder-text">正在获取节庆活动信息...</div>
@@ -370,8 +392,7 @@
         function log(msg) { console.log(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg); }
 
         const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce';
-        const PUBLIC_CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-
+        
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth()+1).padStart(2,'0'); 
@@ -402,8 +423,8 @@
             }
             for (const loc of locs) {
                 try {
-                    const apiUrl = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${MASTER_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`;
-                    const res = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(apiUrl));
+                    const apiUrl = `/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`; // Call worker endpoint
+                    const res = await fetch(apiUrl);
                     const json = await res.json();
                     const hourly = {};
                     if(json.response && json.response.header.resultCode === '00'){
@@ -457,8 +478,8 @@
                         baseDate = getFormatDate(yD);
                         baseTime = "2300";
                     }
-                    const urlS = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${MASTER_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${loc.nx}&ny=${loc.ny}`;
-                    const resS = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(urlS));
+                    const urlS = `/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.nx}&ny=${loc.ny}`; // Call worker endpoint
+                    const resS = await fetch(urlS);
                     const jsonS = await resS.json();
                     
                     if (jsonS.response && jsonS.response.header.resultCode === '00') {
@@ -492,11 +513,11 @@
                     else if (h < 18 || (h === 18 && m < 15)) { midTmFc = todayStr + '0600'; } 
                     else { midTmFc = todayStr + '1800'; }
 
-                    const urlT = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?serviceKey=${MASTER_KEY}&dataType=JSON&regId=${loc.regIdTemp}&tmFc=${midTmFc}`;
-                    const urlL = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?serviceKey=${MASTER_KEY}&dataType=JSON&regId=${loc.regIdLand}&tmFc=${midTmFc}`;
+                    const urlT = `/weather/mid-temp?regId=${loc.regIdTemp}&tmFc=${midTmFc}`; // Call worker endpoint
+                    const urlL = `/weather/mid-land?regId=${loc.regIdLand}&tmFc=${midTmFc}`; // Call worker endpoint
                     
-                    const resT = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(urlT)); const jsonT = await resT.json();
-                    const resL = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(urlL)); const jsonL = await resL.json();
+                    const resT = await fetch(urlT); const jsonT = await resT.json();
+                    const resL = await fetch(urlL); const jsonL = await resL.json();
                     if(jsonT.response && jsonL.response && jsonT.response.header.resultCode === '00' && jsonL.response.header.resultCode === '00') {
                         const t = jsonT.response.body.items.item[0];
                         const l = jsonL.response.body.items.item[0];
@@ -538,7 +559,7 @@
                     const video = document.getElementById(s.id);
                     if(video) {
                         const hls = new Hls();
-                        hls.loadSource(PUBLIC_CORS_PROXY + encodeURIComponent(s.url));
+                        hls.loadSource(`/cctv/?url=${encodeURIComponent(s.url)}`); // Call worker endpoint
                         hls.attachMedia(video);
                     }
                 });
@@ -549,9 +570,8 @@
             const container = document.getElementById('hallasan-list');
             const statusSpan = document.getElementById('hallasan-status');
             try {
-                const dataUrl = 'https://jeju.go.kr/tool/hallasan/road-body.jsp';
-                const res = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(dataUrl));
-                if (!res.ok) throw new Error("Proxy fetch failed: " + res.status);
+                const res = await fetch('/hallasan'); // Call worker endpoint
+                if (!res.ok) throw new Error("Worker fetch failed: " + res.status);
                 const text = await res.text();
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(text, 'text/html');
@@ -594,11 +614,8 @@
         async function fetchFlightData(flightType) {
             const container = document.getElementById(flightType === 'dep' ? 'flight-list-dep' : 'flight-list-arr');
             try {
-                const endpoint = flightType === 'dep' ? 'getDepFlightStatusList' : 'getArrFlightStatusList';
-                const airportParam = flightType === 'dep' ? 'airport_code=CJU' : 'arr_airport_code=CJU';
-                const apiUrl = `http://openapi.airport.co.kr/service/rest/StatusOfFlights/${endpoint}?${airportParam}&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100&serviceKey=${MASTER_KEY}`;
-
-                const res = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(apiUrl));
+                const apiUrl = `/flights/${flightType}?searchday=${todayStr}`; // Call worker endpoint
+                const res = await fetch(apiUrl);
                 const text = await res.text();
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(text, "text/xml");
@@ -670,14 +687,31 @@
             }
         }
         
+        // Global refresh function
+        function refreshSection(sectionId) {
+            switch(sectionId) {
+                case 'cctv': initCCTV(); break;
+                case 'weather': initDaily(); break;
+                case 'weekly-weather': initWeekly(); break;
+                case 'hallasan': initHallasan(); break;
+                case 'festivals': initFestivals(); break;
+                case 'flights-dep': fetchFlightData('dep'); break;
+                case 'flights-arr': fetchFlightData('arr'); break;
+                default: console.warn('Unknown sectionId for refresh:', sectionId);
+            }
+        }
+        function refreshAllSections() {
+            refreshSection('cctv');
+            refreshSection('weather');
+            refreshSection('weekly-weather');
+            refreshSection('hallasan');
+            refreshSection('festivals');
+            refreshSection('flights-dep');
+            refreshSection('flights-arr');
+        }
+        
         // --- Execute all initialization functions ---
-        initCCTV();
-        initDaily();
-        initWeekly();
-        initHallasan();
-        initFestivals();
-        fetchFlightData('dep');
-        fetchFlightData('arr');
+        refreshAllSections();
     </script>
     <!-- Cloudflare Pages Build Trigger -->
 </body>

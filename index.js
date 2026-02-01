@@ -28,7 +28,7 @@ async function handleRequest(event) {
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
         "font-src 'self' https://fonts.gstatic.com; " +
         "connect-src *; " +
-        "media-src 'self' http://211.114.96.121:1935 http://119.65.216.155:1935; " +
+        "media-src 'self' 'blob:' http://211.114.96.121:1935 http://119.65.216.155:1935; " +
         "img-src 'self' data:;"
     );
 
