@@ -15,9 +15,15 @@ async function handleRequest(event) {
   if (pathname === '/') {
     const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html?v=' + Date.now();
     const response = await fetch(githubUrl);
-    return new Response(response.body, {
-      headers: { 'Content-Type': 'text/html;charset=UTF-8' },
-    });
+    
+    // Add cache-busting headers
+    const headers = new Headers(response.headers);
+    headers.set('Content-Type', 'text/html;charset=UTF-8');
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    headers.set('Pragma', 'no-cache');
+    headers.set('Expires', '0');
+
+    return new Response(response.body, { headers });
   }
 
   let targetUrl;
