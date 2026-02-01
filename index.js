@@ -10,6 +10,10 @@ async function handleRequest(event) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
+  if (pathname === '/favicon.ico') {
+    return new Response(null, { status: 204 });
+  }
+
   // For a pure Worker project, we must handle the root path ourselves.
   // Fetch the latest index.html from the main branch on GitHub.
   if (pathname === '/') {
@@ -24,12 +28,12 @@ async function handleRequest(event) {
     headers.set('Expires', '0');
     headers.set('Content-Security-Policy', 
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; " +
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
         "font-src 'self' https://fonts.gstatic.com; " +
-        "connect-src *; " +
-        "media-src 'self' 'blob:' http://211.114.96.121:1935 http://119.65.216.155:1935; " +
-        "img-src 'self' data:;"
+        "connect-src * https://www.google-analytics.com https://www.googletagmanager.com; " +
+        "media-src 'self' blob: http://211.114.96.121:1935 http://119.65.216.155:1935; " +
+        "img-src 'self' data: https://www.googletagmanager.com;"
     );
 
     return new Response(response.body, { headers });
@@ -79,8 +83,10 @@ async function handleRequest(event) {
   else if (pathname.startsWith('/cctv/')) {
     targetUrl = url.searchParams.get('url');
     if (!targetUrl) return new Response('CCTV URL not provided', { status: 400 });
-    // Spoof User-Agent to bypass anti-hotlinking measures
+    const targetOrigin = new URL(targetUrl).origin;
+    // Spoof headers to bypass anti-hotlinking measures
     newHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    newHeaders.set('Referer', targetOrigin + '/');
   }
   else {
     return new Response('API endpoint not found.', { status: 404 });
