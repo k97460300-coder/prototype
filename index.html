@@ -249,6 +249,43 @@
         .accordion-content p {
             margin-bottom: 10px;
         }
+
+        /* Festival Section Styles */
+        .festival-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .festival-item {
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease-in-out;
+        }
+        .festival-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.08);
+        }
+        .festival-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .festival-content {
+            padding: 15px;
+        }
+        .festival-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+        .festival-intro {
+            font-size: 0.9rem;
+            color: var(--muted-text-color);
+            margin: 0;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -302,6 +339,15 @@
             </div>
         </section>
 
+        <section class="info-section" id="festivals">
+            <div class="section-header">
+                <span class="icon">🎉</span><h2>济州节庆活动</h2>
+            </div>
+            <div class="section-content" id="festivals-list">
+                <div class="placeholder-text">正在获取节庆活动信息...</div>
+            </div>
+        </section>
+
         <section class="info-section" id="flights">
             <div class="section-header">
                 <span class="icon">✈️</span><h2>国际线航班变动信息</h2>
@@ -313,84 +359,14 @@
                 <div class="flight-list" id="flight-list-arr"><div class="placeholder-text">正在获取到达信息...</div></div>
             </div>
         </section>
-
-        <!-- New sections for Chinese tourists -->
-        <section class="info-section accordion-section" id="payment-info">
-            <div class="section-header accordion-toggle">
-                <span class="icon">💳</span><h2>支付信息</h2><span class="accordion-icon">▼</span>
-            </div>
-            <div class="section-content accordion-content">
-                <p>在济州岛，主要商业区和旅游景点普遍支持移动支付。支付宝 (Alipay) 和 微信支付 (WeChat Pay) 可以在许多商店、餐馆和免税店使用。建议携带少量韩元现金以备不时之需。</p>
-            </div>
-        </section>
-
-        <section class="info-section accordion-section" id="recommendations">
-            <div class="section-header accordion-toggle">
-                <span class="icon">⭐</span><h2>热门推荐</h2><span class="accordion-icon">▼</span>
-            </div>
-            <div class="section-content accordion-content">
-                <h3>景点 (Jǐngdiǎn)</h3>
-                <ul>
-                    <li>汉拿山 (Hànnáshān)</li>
-                    <li>城山日出峰 (Chéngshān Rìchū Fēng)</li>
-                    <li>牛岛 (Niúdǎo)</li>
-                    <li>泰迪熊博物馆 (Tàdíxióng Bówùguǎn)</li>
-                    <li>偶来小路 (Ǒu lái Xiǎolù)</li>
-                </ul>
-                <h3>美食 (Měishí)</h3>
-                <ul>
-                    <li>黑猪肉 (Hēizhūròu)</li>
-                    <li>海鲜锅 (Hǎixiānguō)</li>
-                    <li>鲍鱼粥 (Bàoyú Zhōu)</li>
-                    <li>橘子 (Júzi)</li>
-                    <li>炸鸡啤酒 (Zhájī Píjiǔ)</li>
-                </ul>
-                <h3>购物 (Gòuwù)</h3>
-                <ul>
-                    <li>新罗免税店 (Xīnlüo Miǎnshuì Diàn)</li>
-                    <li>乐天免税店 (Lètiān Miǎnshuì Diàn)</li>
-                    <li>东门市场 (Dōngmén Shìchǎng)</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="info-section accordion-section" id="emergency-contacts">
-            <div class="section-header accordion-toggle">
-                <span class="icon">🚨</span><h2>紧急联系</h2><span class="accordion-icon">▼</span>
-            </div>
-            <div class="section-content accordion-content">
-                <ul>
-                    <li>**中国驻济州总领事馆 (Zhōngguó Zhù Jìzhōu Zǒnglǐngshìguǎn)**: +82-64-749-8805</li>
-                    <li>**旅游咨询热线 (Lǚyóu Zīxún Rèxiàn)**: 1330 (提供中文服务)</li>
-                    <li>**报警 (Bàojǐng)**: 112</li>
-                    <li>**急救/消防 (Jíjiù/Xiāofáng)**: 119</li>
-                    <li>**济州国际机场 (Jìzhōu Guójì Jīchǎng)**: +82-64-797-2525</li>
-                </ul>
-            </div>
-        </section>
     </main>
 
     <footer class="app-footer">
-        <p>数据来源: 韩国气象厅 (KMA), 韩国机场集团 (KAC), 济州特别自治道</p>
+        <p>数据来源: 韩国气象厅 (KMA), 韩国机场集团 (KAC), 济州特别自治道, VisitJeju</p>
         <p>&copy; 2026 济州岛实时信息. All Rights Reserved.</p>
     </footer>
 
     <script>
-        // Accordion functionality
-        document.querySelectorAll('.accordion-toggle').forEach(button => {
-            button.addEventListener('click', () => {
-                const content = button.nextElementSibling;
-                const icon = button.querySelector('.accordion-icon');
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                    icon.style.transform = 'rotate(0deg)';
-                } else {
-                    content.style.display = 'block';
-                    icon.style.transform = 'rotate(180deg)';
-                }
-            });
-        });
-        
         function log(msg) { console.log(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg); }
 
         const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce';
@@ -663,15 +639,49 @@
             const route = type === 'dep' ? `目的地: ${flight.arrAirport}` : `出发地: ${flight.depAirport}`;
             return `<div class="flight-info-item"><div class="flight-details"><div class="airline-tag">${flight.airline}</div>${flight.flightId}</div><div class="flight-route">${route}</div><div class="flight-status-container"><div class="flight-time">${flight.scheduledatetime.slice(-4, -2)}:${flight.scheduledatetime.slice(-2)}</div><span class="flight-remark" style="color:${status.c};">${status.t}</span></div></div>`;
         }
+
+        async function initFestivals() {
+            const container = document.getElementById('festivals-list');
+            try {
+                const res = await fetch('/festivals');
+                const data = await res.json();
+                if (data.result === '200' && data.items && data.items.length > 0) {
+                    let html = '<div class="festival-grid">';
+                    data.items.forEach(item => {
+                        const photoUrl = item.repPhoto?.photoid?.imgpath || 'https://via.placeholder.com/400x300?text=No+Image';
+                        html += `
+                            <div class="festival-item">
+                                <img src="${photoUrl}" alt="${item.title}" class="festival-img">
+                                <div class="festival-content">
+                                    <h3 class="festival-title">${item.title}</h3>
+                                    <p class="festival-intro">${item.introduction || ''}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div class="placeholder-text">${data.resultMessage || '当前没有节庆活动信息。'}</div>`;
+                }
+            } catch (e) {
+                log(`Festivals Error: ${e.message}`);
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
+            }
+        }
         
         // --- Execute all initialization functions ---
         initCCTV();
         initDaily();
         initWeekly();
         initHallasan();
+        initFestivals();
         fetchFlightData('dep');
         fetchFlightData('arr');
     </script>
+    <!-- Cloudflare Pages Build Trigger -->
+</body>
+</html>
     <!-- Cloudflare Pages Build Trigger -->
 </body>
 </html>

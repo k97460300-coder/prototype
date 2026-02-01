@@ -60,7 +60,12 @@ async function handleRequest(event) {
     }
     // MASTER_KEY is a global variable from secrets in the deployed environment
     targetUrl = `${endpoint}&serviceKey=${MASTER_KEY}`;
-  } 
+  }
+  else if (pathname === '/festivals') {
+    // VISIT_JEJU_API_KEY is a global variable from secrets in the deployed environment
+    // Category 'c4' is typically for festivals/events, needs to be confirmed.
+    targetUrl = `http://api.visitjeju.net/vsjApi/contents/searchlist?apiKey=${VISIT_JEJU_API_KEY}&locale=cn&category=c4`;
+  }
   else if (pathname.startsWith('/flights/')) {
     const type = pathname.split('/')[2];
     const airportParam = type === 'dep' ? 'airport_code=CJU' : 'arr_airport_code=CJU';
