@@ -200,7 +200,7 @@
 
         <section class="info-section" id="weekly-weather">
             <div class="section-header">
-                <span class="icon">📅</span><h2>未来10天长期预报</h2>
+                <span class="icon">📅</span><h2>未来10天长期预보</h2>
             </div>
             <div class="section-content weather-grid-container" id="weekly-forecasts">
                 <div class="placeholder-text">正在获取长期预报数据...</div>
@@ -291,7 +291,7 @@
                             if(h>=19 && (icon==='☀️'||icon==='⛅')) icon='🌙';
                             let pcp = d.PCP || '0';
                             if (pcp === "강수없음") pcp = "0mm"; else if (pcp.includes("미만")) pcp = "~1mm"; else if (!pcp.endsWith("mm")) pcp += "mm";
-                            html += `<div class="hourly-col"><div class="time">${h}h</div><div class="icon">${icon}</div><div class="temp">${d.TMP||'-'}°</div><div class="precip ${pcp!=='0mm'?'precip-blue':''}">${pcp}</div><div style="font-size:10px; color:#555;">${d.WSD||'-'}m/s</div></div>`;
+                            html += `<div class="hourly-col"><div class="time">${h}h</div><div class="icon">${icon}</div><div class="temp">${d.TMP||'-'}°</div><div class="precip ${pcp!=='0mm'?'precip-blue':''}">${pcp}</div></div>`;
                         }
                         html += `</div>`;
                         const locationDiv = document.createElement('div');
@@ -307,54 +307,17 @@
             const container = document.getElementById('weekly-forecasts');
             container.innerHTML = '';
             const locs = [
-                { name: "济州市", sub: "Jeju City", regIdTemp: '11G00201', regIdLand: '11G00000', nx: 52, ny: 38 },
-                { name: "西归浦", sub: "Seogwipo", regIdTemp: '11G00401', regIdLand: '11G00000', nx: 52, ny: 32 }
+                { name: "济州市", sub: "Jeju City", regIdTemp: '11G00201', regIdLand: '11G00000' },
+                { name: "西归浦", sub: "Seogwipo", regIdTemp: '11G00401', regIdLand: '11G00000' }
             ];
+            let h = now.getHours(), m = now.getMinutes(), midTmFc;
+            if (h < 6 || (h === 6 && m < 15)) { const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1); midTmFc = getFormatDate(yD) + '1800';} 
+            else if (h < 18 || (h === 18 && m < 15)) { midTmFc = todayStr + '0600'; } 
+            else { midTmFc = todayStr + '1800'; }
 
             for (const loc of locs) {
-                let combinedData = {};
-                
+                let combinedData = {}, html = '';
                 try {
-                    let baseDate = todayStr, baseTime = "0200";
-                    if (now.getHours() < 3) {
-                        const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
-                        baseDate = getFormatDate(yD);
-                        baseTime = "2300";
-                    }
-                    const resS = await fetch(`/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.nx}&ny=${loc.ny}`);
-                    const jsonS = await resS.json();
-                    
-                    if (jsonS.response && jsonS.response.header.resultCode === '00') {
-                        const dailyData = {};
-                        jsonS.response.body.items.item.forEach(it => {
-                            const date = it.fcstDate;
-                            if (!dailyData[date]) dailyData[date] = { TMN: 100, TMX: -100, SKY: [], PTY: [] };
-                            if (it.category === 'TMN') dailyData[date].TMN = Math.min(dailyData[date].TMN, parseFloat(it.fcstValue));
-                            if (it.category === 'TMX') dailyData[date].TMX = Math.max(dailyData[date].TMX, parseFloat(it.fcstValue));
-                            if (it.category === 'SKY') dailyData[date].SKY.push(it.fcstValue);
-                            if (it.category === 'PTY') dailyData[date].PTY.push(it.fcstValue);
-                        });
-
-                        for(let i=0; i < 3; i++) {
-                            const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
-                            const dStr = getFormatDate(d);
-                            const data = dailyData[dStr];
-                            if(data) {
-                                let wf = "맑음";
-                                if (data.PTY.some(p => p > 0)) wf = "비/눈";
-                                else if (data.SKY.some(s => s > 5)) wf = "흐림";
-                                combinedData[i] = { min: data.TMN, max: data.TMX, wf: wf, pop: 0 };
-                            }
-                        }
-                    }
-                } catch(e) { log(`Weekly (Short) Error for ${loc.name}: ${e.message}`); }
-
-                try {
-                    let h = now.getHours(), m = now.getMinutes(), midTmFc;
-                    if (h < 6 || (h === 6 && m < 15)) { const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1); midTmFc = getFormatDate(yD) + '1800';} 
-                    else if (h < 18 || (h === 18 && m < 15)) { midTmFc = todayStr + '0600'; } 
-                    else { midTmFc = todayStr + '1800'; }
-
                     const resT = await fetch(`/weather/mid-temp?regId=${loc.regIdTemp}&tmFc=${midTmFc}`); const jsonT = await resT.json();
                     const resL = await fetch(`/weather/mid-land?regId=${loc.regIdLand}&tmFc=${midTmFc}`); const jsonL = await resL.json();
                     if(jsonT.response && jsonL.response && jsonT.response.header.resultCode === '00' && jsonL.response.header.resultCode === '00') {
@@ -366,18 +329,16 @@
                             combinedData[i] = { min: t['taMin'+i], max: t['taMax'+i], wf: wf, pop: pop };
                         }
                     }
-                } catch(e) { log(`Weekly (Mid) Error for ${loc.name}: ${e.message}`); }
+                } catch(e) { log(`Mid API Error for ${loc.name}: ${e.message}`); }
                 
-                let html = `<div class="weekly-grid">`;
-                for(let i=0; i<=10; i++) {
+                html += `<div class="weekly-grid">`;
+                for(let i=3; i<=10; i++) {
                     const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
                     const label = (d.getMonth()+1) + '/' + d.getDate();
                     const w = combinedData[i] || { wf: '-', min: '-', max: '-', pop: '-' };
                     let icon = '☀️';
                     if(w.wf.includes('흐림')) icon='☁️'; else if(w.wf.includes('구름')) icon='⛅'; else if(w.wf.includes('비')) icon='🌧️'; else if(w.wf.includes('눈')) icon='❄️';
-                    const minTemp = w.min === 100 ? '-' : w.min;
-                    const maxTemp = w.max === -100 ? '-' : w.max;
-                    html += `<div class="weekly-col"><div class="time">${label}</div><div class="icon">${icon}</div><div class="temp"><span class="high">${maxTemp}°</span> / <span class="low">${minTemp}°</span></div><div class="precip ${w.pop>0?'precip-blue':''}">${w.pop}%</div></div>`;
+                    html += `<div class="weekly-col"><div class="time">${label}</div><div class="icon">${icon}</div><div class="temp"><span class="high">${w.max}°</span> / <span class="low">${w.min}°</span></div><div class="precip ${w.pop>0?'precip-blue':''}">${w.pop}%</div></div>`;
                 }
                 html += `</div>`;
                 const locationDiv = document.createElement('div');
@@ -503,7 +464,5 @@
         fetchFlightData('dep');
         fetchFlightData('arr');
     </script>
-</body>
-</html>
 </body>
 </html>
