@@ -32,7 +32,11 @@ async function handleRequest(event) {
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
         "font-src 'self' https://fonts.gstatic.com; " +
         "connect-src * https://www.google-analytics.com https://www.googletagmanager.com; " +
+ HEAD
         "media-src 'self' blob: http://211.114.96.121:1935 http://119.65.216.155:1935; " +
+
+        "media-src 'self' 'blob:' http://211.114.96.121:1935 http://119.65.216.155:1935; " +
+a18b8727e41a468b91e124b6aa87e23ec7f75830
         "img-src 'self' data: https://www.googletagmanager.com;"
     );
 
