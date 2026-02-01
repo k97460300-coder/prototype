@@ -16,12 +16,21 @@ async function handleRequest(event) {
     const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html?v=' + Date.now();
     const response = await fetch(githubUrl);
     
-    // Add cache-busting headers
+    // Add security and cache-busting headers
     const headers = new Headers(response.headers);
     headers.set('Content-Type', 'text/html;charset=UTF-8');
     headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     headers.set('Pragma', 'no-cache');
     headers.set('Expires', '0');
+    headers.set('Content-Security-Policy', 
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "font-src 'self' https://fonts.gstatic.com; " +
+        "connect-src *; " +
+        "media-src 'self' http://211.114.96.121:1935 http://119.65.216.155:1935; " +
+        "img-src 'self' data:;"
+    );
 
     return new Response(response.body, { headers });
   }
