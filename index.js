@@ -1,73 +1,87 @@
-//-
-import html from './index.html';
 
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event).catch(
+    (err) => new Response(err.stack, { status: 500 })
+  ))
+})
 
+async function handleRequest(event) {
+  const request = event.request;
+  const url = new URL(request.url);
+  const pathname = url.pathname;
 
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
+  let targetUrl;
 
-    if (url.pathname === '/') {
-      return new Response(html, {
-        headers: {
-          'content-type': 'text/html;charset=UTF-8',
-        },
-      });
+  // --- API Routing ---
+  if (pathname.startsWith('/weather/')) {
+    const type = pathname.split('/')[2];
+    const regId = url.searchParams.get('regId');
+    const tmFc = url.searchParams.get('tmFc');
+    const nx = url.searchParams.get('nx');
+    const ny = url.searchParams.get('ny');
+    const base_date = url.searchParams.get('base_date');
+    const base_time = url.searchParams.get('base_time');
+
+    let endpoint;
+    if (type === 'short') {
+      endpoint = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?numOfRows=1000&pageNo=1&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+    } else if (type === 'mid-temp') {
+      endpoint = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?dataType=JSON&regId=${regId}&tmFc=${tmFc}`;
+    } else if (type === 'mid-land') {
+      endpoint = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId=${regId}&tmFc=${tmFc}`;
+    } else {
+      return new Response('Invalid weather API type', { status: 400 });
+    }
+    // MASTER_KEY is a global variable in the worker environment (from .dev.vars or secrets)
+    targetUrl = `${endpoint}&serviceKey=${MASTER_KEY}`;
+  } 
+  else if (pathname.startsWith('/flights/')) {
+    const type = pathname.split('/')[2];
+    const airportParam = type === 'dep' ? 'airport_code=CJU' : 'arr_airport_code=CJU';
+    const endpoint = type === 'dep' ? 'getDepFlightStatusList' : 'getArrFlightStatusList';
+    const todayStr = url.searchParams.get('searchday');
+    targetUrl = `http://openapi.airport.co.kr/service/rest/StatusOfFlights/${endpoint}?${airportParam}&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100&serviceKey=${MASTER_KEY}`;
+  }
+  else if (pathname === '/hallasan') {
+    targetUrl = 'https://jeju.go.kr/tool/hallasan/road-body.jsp';
+  }
+  else if (pathname.startsWith('/cctv/')) {
+    targetUrl = url.searchParams.get('url');
+    if (!targetUrl) return new Response('CCTV URL not provided', { status: 400 });
+  }
+  else {
+    // This should only be hit if the request is not for a static file and not for an API route.
+    return new Response('API endpoint not found.', { status: 404 });
+  }
+
+  // --- Generic Proxy Logic ---
+  const proxyRequest = new Request(targetUrl, {
+    method: request.method,
+    headers: request.headers,
+    redirect: 'follow'
+  });
+
+  try {
+    const response = await fetch(proxyRequest);
+    const newHeaders = new Headers(response.headers);
+    newHeaders.set('Access-Control-Allow-Origin', '*');
+    newHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+    newHeaders.set('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // Handle EUC-KR encoding for Hallasan page
+    if (pathname === '/hallasan' && response.headers.get('content-type')?.includes('euc-kr')) {
+        const buffer = await response.arrayBuffer();
+        const decoder = new TextDecoder('euc-kr');
+        const text = decoder.decode(buffer);
+        return new Response(text, { status: response.status, headers: newHeaders });
     }
 
-    if (url.pathname === '/api') {
-      const apiUrl = url.searchParams.get('url');
-      if (!apiUrl) {
-        return new Response('Missing url parameter', { status: 400 });
-      }
-
-      // Append the API key to the target URL
-      const fullApiUrl = `${apiUrl}&serviceKey=${env.MASTER_KEY}`;
-
-      // Forward the request to the actual API
-      const apiRequest = new Request(fullApiUrl, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-      });
-
-      // To avoid CORS issues, we can fetch and return the response
-      const apiResponse = await fetch(apiRequest);
-
-      // Create a new response with CORS headers to allow the frontend to access it
-      const response = new Response(apiResponse.body, apiResponse);
-      response.headers.set('Access-Control-Allow-Origin', '*');
-      response.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
-
-      return response;
-    }
-
-    if (url.pathname === '/cctv') {
-      // This is a placeholder for the CCTV proxy.
-      // The current implementation is non-functional and will be addressed separately.
-      return new Response('CCTV service is temporarily unavailable.', { status: 503 });
-    }
-
-    if (url.pathname === '/proxy') {
-        const targetUrl = url.searchParams.get('url');
-        if (!targetUrl) {
-            return new Response('Missing target URL', { status: 400 });
-        }
-
-        try {
-            const res = await fetch(targetUrl);
-            const response = new Response(res.body, res);
-            response.headers.set('Access-Control-Allow-Origin', '*');
-            response.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
-            response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
-            return response;
-        } catch (e) {
-            return new Response('Error fetching from proxy: ' + e.message, { status: 500 });
-        }
-    }
-
-
-    return new Response('Not found', { status: 404 });
-  },
-};
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders
+    });
+  } catch (error) {
+    return new Response('Error fetching from proxy: ' + error.message, { status: 500 });
+  }
+}

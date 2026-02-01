@@ -19,10 +19,7 @@
             --border-radius: 12px;
         }
         
-        html {
-            scroll-behavior: smooth;
-        }
-
+        html { scroll-behavior: smooth; }
         body {
             margin: 0;
             background-color: var(--background-color);
@@ -36,13 +33,11 @@
             color: white;
             padding: 40px 20px;
             text-align: center;
-            border-bottom: 5px solid var(--secondary-color);
         }
         .main-header h1 {
             margin: 0;
             font-size: 2.5rem;
             font-weight: 900;
-            letter-spacing: 1.5px;
         }
         .main-header p {
             margin: 10px 0 0;
@@ -63,7 +58,6 @@
             margin-bottom: 25px;
             overflow: hidden;
         }
-
         .section-header {
             display: flex;
             align-items: center;
@@ -86,286 +80,172 @@
             color: #2e7d32;
             font-weight: bold;
         }
-        .section-header .refresh-icon {
+         .section-header .refresh-icon {
             cursor: pointer;
             font-size: 1.2rem;
             color: var(--muted-text-color);
-            transition: transform 0.3s ease, color 0.3s ease;
+            transition: transform 0.3s ease;
             margin-left: 10px;
         }
         .section-header .refresh-icon:hover {
             transform: rotate(90deg);
             color: var(--primary-color);
         }
-
-        .section-content {
-            padding: 20px;
-        }
+        .section-content { padding: 20px; }
         
-        /* CCTV Section */
         .cctv-grid {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 15px;
         }
         .video-box {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-        .offline-overlay {
-            font-weight: 500;
-            font-size: 1.1rem;
-            background: rgba(0,0,0,0.4);
-            padding: 10px;
-            border-radius: 5px;
+            position: relative; width: 100%; aspect-ratio: 16/9;
+            background: #000; border-radius: 8px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; color: white;
         }
         .vid-label {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            font-weight: bold;
-            font-size: 1rem;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
-            z-index: 10;
+            position: absolute; bottom: 10px; left: 10px;
+            font-weight: bold; font-size: 1rem; text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
         }
+        .live-tag {
+            position: absolute; top: 10px; left: 10px; background: #ff5252; color: white;
+            padding: 2px 6px; font-size: 10px; border-radius: 3px; z-index: 10;
+            animation: blink 1.5s infinite; font-weight: bold;
+        }
+        @keyframes blink { 0%, 100% {opacity: 1;} 50% {opacity: 0.6;} }
+        video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Weather Section */
         .weather-grid-container {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 25px;
         }
+        .weather-location-group { margin-bottom: 20px; }
         .loc-info { margin-bottom: 15px; }
-        .loc-name { font-size: 1.3rem; font-weight: 700; color: var(--text-color); }
+        .loc-name { font-size: 1.3rem; font-weight: 700; }
         .loc-sub { font-size: 0.9rem; color: var(--muted-text-color); margin-left: 8px; }
-        
-        .hourly-grid, .weekly-grid {
-            display: flex;
-            overflow-x: auto;
-            padding-bottom: 15px; /* For scrollbar */
-        }
-        .hourly-col, .weekly-col {
-            flex: 0 0 75px; /* Fixed width for each column */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 0 5px;
-        }
+        .hourly-grid { display: flex; overflow-x: auto; padding-bottom: 15px; }
+        .hourly-col { flex: 0 0 70px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 5px; }
         .time { font-size: 0.85rem; color: var(--muted-text-color); font-weight: bold; margin-bottom: 8px; }
         .icon { font-size: 1.8rem; margin-bottom: 8px; }
         .temp { font-size: 1.1rem; font-weight: 700; }
-        .high { color: #d32f2f; }
-        .low { color: #1976d2; }
         .precip { font-size: 0.9rem; color: #546e7a; margin-top: 5px; }
         .precip-blue { color: var(--secondary-color); font-weight: bold; }
 
-        /* Hallasan Trails */
-        .trail-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .weekly-grid { display: flex; overflow-x: auto; padding-bottom: 15px; }
+        .weekly-col { flex: 0 0 75px; text-align: center; }
+        .high { color: #d32f2f; } .low { color: #1976d2; }
+        
+        .trail-list { display: flex; flex-direction: column; gap: 10px; }
         .trail-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--background-color);
-            padding: 15px;
-            border-radius: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--background-color); padding: 15px; border-radius: 8px;
             border: 1px solid var(--border-color);
         }
-        .trail-name {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        .trail-status {
-            font-size: 0.9rem;
-            font-weight: bold;
-            padding: 5px 12px;
-            border-radius: 15px;
-            white-space: nowrap;
-        }
+        .trail-name { font-weight: 700; font-size: 1.1rem; }
+        .trail-status { font-size: 0.9rem; font-weight: bold; padding: 5px 12px; border-radius: 15px; }
 
-        /* Flights */
         .flight-list { display: flex; flex-direction: column; gap: 12px; }
         .flight-info-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            background: var(--background-color);
-            border-radius: 8px;
+            display: flex; align-items: center; padding: 12px;
+            background: var(--background-color); border-radius: 8px;
             border: 1px solid var(--border-color);
         }
         .flight-details { flex-grow: 1; }
-        .airline-tag {
-            background-color: var(--primary-color);
-            color: white;
-            font-size: 0.8rem;
-            font-weight: bold;
-            padding: 3px 8px;
-            border-radius: 5px;
-            margin-right: 8px;
-        }
+        .airline-tag { background-color: var(--primary-color); color: white; font-size: 0.8rem; font-weight: bold; padding: 3px 8px; border-radius: 5px; margin-right: 8px;}
         .flight-route { font-size: 0.9rem; color: var(--muted-text-color); margin-top: 4px; }
         .flight-status-container { text-align: right; }
         .flight-time { font-size: 1.1rem; font-weight: 700; }
         .flight-remark { font-size: 0.9rem; font-weight: bold; }
 
-        .placeholder-text {
-            padding: 40px;
-            text-align: center;
-            color: var(--muted-text-color);
-            font-size: 1rem;
-        }
-        
-        .app-footer {
-            text-align: center;
-            padding: 30px 20px;
-            font-size: 0.9rem;
-            color: var(--muted-text-color);
-        }
-        
-        /* AdSense placeholder */
+        .placeholder-text { padding: 40px; text-align: center; color: var(--muted-text-color); }
         .adsense-placeholder {
-            background: #e9ecef;
-            text-align: center;
-            padding: 20px;
-            margin: 25px 0;
-            border-radius: var(--border-radius);
-            font-size: 0.9rem;
-            color: var(--muted-text-color);
-            border: 1px dashed var(--border-color);
+            background: #e9ecef; text-align: center; padding: 40px 20px;
+            margin: 25px 0; border-radius: var(--border-radius); font-size: 1rem;
+            color: var(--muted-text-color); border: 1px dashed var(--border-color);
         }
-
+        .app-footer { text-align: center; padding: 30px 20px; font-size: 0.9rem; color: var(--muted-text-color); }
     </style>
 </head>
 <body>
     <header class="main-header">
-        <h1>济州岛实时天气与旅行信息</h1>
+        <h1>济州岛实时旅行信息</h1>
         <p>专为游客设计的实时天气、交通与实用信息聚合平台</p>
     </header>
 
     <main class="container">
-        <!-- CCTV Section -->
         <section class="info-section" id="cctv">
             <div class="section-header">
-                <span class="icon">📹</span>
-                <h2>济州岛实况 (实时监控)</h2>
+                <span class="icon">📹</span><h2>济州岛实况 (实时监控)</h2>
             </div>
             <div class="section-content">
                 <div class="cctv-grid">
-                    <div class="video-box">
-                        <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
-                        <div class="vid-label">🏝️ 牛岛 (天津港)</div>
-                    </div>
-                    <div class="video-box">
-                        <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
-                        <div class="vid-label">🏔️ 汉拿山 (御势岳)</div>
-                    </div>
-                    <div class="video-box">
-                        <div class="offline-overlay">CCTV 스트림이 현재 오프라인 상태입니다.<br>잠시 후 다시 시도해주세요.</div>
-                        <div class="vid-label">🛣️ 1100高地 (1100公路)</div>
-                    </div>
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏝️ 牛岛 (天津港)</div><video id="v1" autoplay muted playsinline></video></div>
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏔️ 汉拿山 (御势岳)</div><video id="v2" autoplay muted playsinline></video></div>
+                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🛣️ 1100高地 (1100公路)</div><video id="v3" autoplay muted playsinline></video></div>
                 </div>
             </div>
         </section>
 
-        <div class="adsense-placeholder">
-            谷歌广告 (Google AdSense) 将在此处展示
-        </div>
+        <div class="adsense-placeholder">谷歌广告 (Google AdSense) 将在此处展示</div>
 
-        <!-- Weather Section -->
         <section class="info-section" id="weather">
             <div class="section-header">
-                <span class="icon">☀️</span>
-                <h2>今日逐时预报</h2>
-                <span class="badge" id="date-label"></span>
+                <span class="icon">☀️</span><h2>今日逐时预报</h2><span class="badge" id="date-label"></span>
             </div>
             <div class="section-content weather-grid-container" id="daily-forecasts">
-                 <div id="daily-list-1"><div class="placeholder-text">正在获取实时天气数据...</div></div>
-                 <div id="daily-list-2"><div class="placeholder-text"></div></div>
+                 <div class="placeholder-text">正在获取实时天气数据...</div>
             </div>
         </section>
 
         <section class="info-section" id="weekly-weather">
             <div class="section-header">
-                <span class="icon">📅</span>
-                <h2>未来10天长期预报</h2>
+                <span class="icon">📅</span><h2>未来10天长期预报</h2>
             </div>
             <div class="section-content weather-grid-container" id="weekly-forecasts">
-                <div id="weekly-list-1"><div class="placeholder-text">正在获取长期预报数据...</div></div>
-                <div id="weekly-list-2"><div class="placeholder-text"></div></div>
+                <div class="placeholder-text">正在获取长期预报数据...</div>
             </div>
         </section>
+        
+        <div class="adsense-placeholder">谷歌广告 (Google AdSense) 将在此处展示</div>
 
-        <!-- AdSense Placeholder -->
-        <div class="adsense-placeholder">
-            谷歌广告 (Google AdSense) 将在此处展示
-        </div>
-
-        <!-- Hallasan Trails Section -->
         <section class="info-section" id="hallasan">
             <div class="section-header">
-                <span class="icon">🏔️</span>
-                <h2>汉拿山探访路管制信息</h2>
-                <span class="badge" id="hallasan-status">查询中</span>
+                <span class="icon">🏔️</span><h2>汉拿山探访路管制信息</h2><span class="badge" id="hallasan-status">查询中</span>
             </div>
             <div class="section-content" id="hallasan-list">
                 <div class="placeholder-text">正在获取实时管制信息...</div>
             </div>
         </section>
 
-        <!-- Flights Section -->
         <section class="info-section" id="flights">
             <div class="section-header">
-                <span class="icon">✈️</span>
-                <h2>国际线航班延误/取消信息</h2>
+                <span class="icon">✈️</span><h2>国际线航班变动信息</h2>
             </div>
             <div class="section-content">
-                <h3>出发 (Departures) <span class="refresh-icon" onclick="refreshDepartureFlights()">🔄</span></h3>
-                <div class="flight-list" id="flight-list-dep">
-                    <div class="placeholder-text">正在获取出发信息...</div>
-                </div>
-                <h3 style="margin-top: 30px;">到达 (Arrivals) <span class="refresh-icon" onclick="refreshArrivalFlights()">🔄</span></h3>
-                <div class="flight-list" id="flight-list-arr">
-                    <div class="placeholder-text">正在获取到达信息...</div>
-                </div>
+                <h3>出发 (Departures) <span class="refresh-icon" onclick="fetchFlightData('dep')">🔄</span></h3>
+                <div class="flight-list" id="flight-list-dep"><div class="placeholder-text">正在获取出发信息...</div></div>
+                <h3 style="margin-top: 30px;">到达 (Arrivals) <span class="refresh-icon" onclick="fetchFlightData('arr')">🔄</span></h3>
+                <div class="flight-list" id="flight-list-arr"><div class="placeholder-text">正在获取到达信息...</div></div>
             </div>
         </section>
     </main>
 
     <footer class="app-footer">
-        <p>数据来源: 韩国气象厅 (KMA), 韩国机场集团 (KAC)</p>
+        <p>数据来源: 韩国气象厅 (KMA), 韩国机场集团 (KAC), 济州特别自治道</p>
         <p>&copy; 2026 济州岛实时信息. All Rights Reserved.</p>
     </footer>
 
     <script>
-        // Data fetching and rendering logic remains the same
-        function log(msg) {
-            if (typeof msg === 'object') {
-                console.log(JSON.stringify(msg, null, 2));
-            } else {
-                console.log(msg);
-            }
-        }
-        
+        function log(msg) { console.log(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg); }
+
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth()+1).padStart(2,'0'); 
         const dd = String(now.getDate()).padStart(2,'0');
         const todayStr = yyyy + mm + dd;
         
-        const dateText = (now.getMonth()+1) + '月' + now.getDate() + '日';
-        document.getElementById('date-label').innerText = dateText;
+        document.getElementById('date-label').innerText = `${mm}月${dd}日`;
 
         function getFormatDate(date) {
             const y = date.getFullYear();
@@ -375,33 +255,22 @@
         }
 
         async function initDaily() {
+            const container = document.getElementById('daily-forecasts');
+            container.innerHTML = '';
             const locs = [
-                {n:"济州市 (莲洞)", sub:"Yeon-dong", x:52, y:38},
-                {n:"西归浦 (中文)", sub:"Jungmun", x:52, y:32},
-                {n:"汉拿山", sub:"Halla Mountain", x:52, y:35},
-                {n:"牛岛", sub:"Udo Island", x:60, y:38}
+                {n:"济州市 (莲洞)", sub:"Yeon-dong", x:52, y:38}, {n:"西归浦 (中文)", sub:"Jungmun", x:52, y:32},
+                {n:"汉拿山", sub:"Halla Mtn.", x:52, y:35}, {n:"牛岛", sub:"Udo Island", x:60, y:38}
             ];
-            
-            let baseDate = todayStr;
-            let baseTime = "0200";
+            let baseDate = todayStr, baseTime = "0200";
             if (now.getHours() < 3) {
                  const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
                  baseDate = getFormatDate(yD);
                  baseTime = "2300";
             }
-
-            const container1 = document.getElementById('daily-list-1');
-            const container2 = document.getElementById('daily-list-2');
-            container1.innerHTML = '';
-            container2.innerHTML = '';
-
-            for (const [index, loc] of locs.entries()) {
-                const targetContainer = index < 2 ? container1 : container2;
+            for (const loc of locs) {
                 try {
-                    const url = `/api?url=${encodeURIComponent(`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?numOfRows=1000&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`)}`;
-                    const res = await fetch(url);
+                    const res = await fetch(`/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`);
                     const json = await res.json();
-                    
                     const hourly = {};
                     if(json.response && json.response.header.resultCode === '00'){
                         json.response.body.items.item.forEach(i => {
@@ -413,357 +282,145 @@
                                 }
                             }
                         });
-
-                        let html = '';
-                        html += `<div class="hourly-grid">`;
+                        let html = `<div class="hourly-grid">`;
                         for(let h=9; h<=22; h++) {
                             const d = hourly[h] || {};
                             let icon = '☀️';
                             const pty=parseInt(d.PTY||0), sky=parseInt(d.SKY||1);
                             if(pty>0) icon=(pty===3)?'❄️':'🌧️'; else if(sky>8) icon='☁️'; else if(sky>5) icon='⛅';
                             if(h>=19 && (icon==='☀️'||icon==='⛅')) icon='🌙';
-
                             let pcp = d.PCP || '0';
-                            if (pcp === "강수없음") pcp = "0mm";
-                            else if (pcp.includes("미만")) pcp = "~1mm";
-                            else if (!pcp.endsWith("mm")) pcp += "mm";
-
+                            if (pcp === "강수없음") pcp = "0mm"; else if (pcp.includes("미만")) pcp = "~1mm"; else if (!pcp.endsWith("mm")) pcp += "mm";
                             html += `<div class="hourly-col"><div class="time">${h}h</div><div class="icon">${icon}</div><div class="temp">${d.TMP||'-'}°</div><div class="precip ${pcp!=='0mm'?'precip-blue':''}">${pcp}</div></div>`;
                         }
                         html += `</div>`;
-                        
-                        targetContainer.innerHTML += `<div class="weather-location-group"><div class="loc-info"><span class="loc-name">${loc.n}</span><span class="loc-sub">${loc.sub}</span></div>${html}</div>`;
+                        const locationDiv = document.createElement('div');
+                        locationDiv.className = 'weather-location-group';
+                        locationDiv.innerHTML = `<div class="loc-info"><span class="loc-name">${loc.n}</span><span class="loc-sub">${loc.sub}</span></div>${html}`;
+                        container.appendChild(locationDiv);
                     }
-                } catch(e) { log('Daily Error: ' + e.message); }
+                } catch(e) { log(`Daily Error for ${loc.n}: ${e.message}`); }
             }
         }
 
         async function initWeekly() {
+            const container = document.getElementById('weekly-forecasts');
+            container.innerHTML = '';
             const locs = [
-                { name: "济州市", sub: "Jeju City", regIdTemp: '11G00201', regIdLand: '11G00000', nx:52, ny:38 },
-                { name: "西归浦", sub: "Seogwipo", regIdTemp: '11G00401', regIdLand: '11G00000', nx:52, ny:32 },
-                { name: "汉拿山", sub: "Halla Mountain", regIdTemp: '11G00401', regIdLand: '11G00000', nx:52, ny:35 },
-                { name: "牛岛", sub: "Udo Island", regIdTemp: '11G00302', regIdLand: '11G00000', nx:60, ny:38 }
+                { name: "济州市", sub: "Jeju City", regIdTemp: '11G00201', regIdLand: '11G00000' },
+                { name: "西归浦", sub: "Seogwipo", regIdTemp: '11G00401', regIdLand: '11G00000' }
             ];
+            let h = now.getHours(), m = now.getMinutes(), midTmFc;
+            if (h < 6 || (h === 6 && m < 15)) { const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1); midTmFc = getFormatDate(yD) + '1800';} 
+            else if (h < 18 || (h === 18 && m < 15)) { midTmFc = todayStr + '0600'; } 
+            else { midTmFc = todayStr + '1800'; }
 
-            let shortBaseDate = todayStr;
-            let shortBaseTime = "0200";
-            if (now.getHours() < 3) {
-                 const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
-                 shortBaseDate = getFormatDate(yD);
-                 shortBaseTime = "2300";
-            }
-
-            const h = now.getHours();
-            const m = now.getMinutes();
-            let midTmFc;
-
-            if (h < 6 || (h === 6 && m < 15)) { // Before 6:15 AM
-                 const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
-                 midTmFc = getFormatDate(yD) + '1800';
-            } else if (h < 18 || (h === 18 && m < 15)) { // Between 6:15 AM and 6:15 PM
-                 midTmFc = todayStr + '0600'; 
-            } else { // After 6:15 PM
-                 midTmFc = todayStr + '1800'; 
-            }
-
-            const container1 = document.getElementById('weekly-list-1');
-            const container2 = document.getElementById('weekly-list-2');
-            container1.innerHTML = '';
-            container2.innerHTML = '';
-
-            for (const [index, loc] of locs.entries()) {
-                const targetContainer = index < 2 ? container1 : container2;
-                let combinedData = {};
-                
+            for (const loc of locs) {
+                let combinedData = {}, html = '';
                 try {
-                    const urlS = `/api?url=${encodeURIComponent(`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?numOfRows=1000&pageNo=1&dataType=JSON&base_date=${shortBaseDate}&base_time=${shortBaseTime}&nx=${loc.nx}&ny=${loc.ny}`)}`;
-                    const resS = await fetch(urlS); const jsonS = await resS.json();
-                    
-                    if(jsonS.response && jsonS.response.header.resultCode === '00'){
-                        const tempDays = {};
-                        jsonS.response.body.items.item.forEach(it => {
-                            if (it.fcstDate === todayStr) {
-                                const date = it.fcstDate;
-                                if(!tempDays[date]) tempDays[date] = { min:100, max:-100, temps:[], hourlyData: Array(24).fill(null).map(() => ({})) };
-                                
-                                if(it.category === 'TMN') tempDays[date].min = parseFloat(it.fcstValue);
-                                if(it.category === 'TMX') tempDays[date].max = parseFloat(it.fcstValue);
-                                if(it.category === 'TMP') tempDays[date].temps.push(parseFloat(it.fcstValue));
-
-                                const h = parseInt(it.fcstTime.slice(0, 2));
-                                tempDays[date].hourlyData[h][it.category] = it.fcstValue;
-                            }
-                        });
-                        
-                        for(let i=0; i<=3; i++){
-                            const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
-                            const dStr = getFormatDate(d);
-                            const t = tempDays[dStr];
-                            if(t) {
-                                if(t.min === 100 && t.temps.length > 0) t.min = Math.min(...t.temps);
-                                if(t.max === -100 && t.temps.length > 0) t.max = Math.max(...t.temps);
-
-                                const weatherCounts = {};
-                                let dominantWeather = "맑음";
-                                let maxPop = 0;
-
-                                for (let h = 9; h <= 22; h++) {
-                                    const hourData = t.hourlyData[h] || {};
-                                    const pty = parseInt(hourData.PTY || 0);
-                                    const sky = parseInt(hourData.SKY || 1);
-                                    const pop = parseInt(hourData.POP || 0);
-                                    if (pop > maxPop) maxPop = pop;
-
-                                    let weatherKey = '맑음';
-                                    if (pty > 0) {
-                                        weatherKey = (pty === 3) ? '눈' : '비';
-                                    } else {
-                                        if (sky === 4) weatherKey = '흐림';
-                                        else if (sky === 3) weatherKey = '구름많음';
-                                    }
-                                    weatherCounts[weatherKey] = (weatherCounts[weatherKey] || 0) + 1;
-                                }
-
-                                let maxCount = 0;
-                                for (const weather in weatherCounts) {
-                                    if (weatherCounts[weather] > maxCount) {
-                                        maxCount = weatherCounts[weather];
-                                        dominantWeather = weather;
-                                    }
-                                }
-                                
-                                combinedData[i] = { min: t.min, max: t.max, wf: dominantWeather, pop: maxPop };
-                            }
-                        }
-                    }
-                } catch(e) { log('Short API Error: ' + e.message); }
-
-                try {
-                    const urlT = `/api?url=${encodeURIComponent(`https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?dataType=JSON&regId=${loc.regIdTemp}&tmFc=${midTmFc}`)}`;
-                    const urlL = `/api?url=${encodeURIComponent(`https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId=${loc.regIdLand}&tmFc=${midTmFc}`)}`;
-
-                    log(`Fetching Mid-term for ${loc.name}`);
-                    log(`URL_TA: ${urlT}`);
-                    const resT = await fetch(urlT); const jsonT = await resT.json();
-                    log(`Response_TA for ${loc.name}:`);
-                    log(jsonT);
-                    
-                    log(`URL_LAND: ${urlL}`);
-                    const resL = await fetch(urlL); const jsonL = await resL.json();
-                    log(`Response_LAND for ${loc.name}:`);
-                    log(jsonL);
-
+                    const resT = await fetch(`/weather/mid-temp?regId=${loc.regIdTemp}&tmFc=${midTmFc}`); const jsonT = await resT.json();
+                    const resL = await fetch(`/weather/mid-land?regId=${loc.regIdLand}&tmFc=${midTmFc}`); const jsonL = await resL.json();
                     if(jsonT.response && jsonL.response && jsonT.response.header.resultCode === '00' && jsonL.response.header.resultCode === '00') {
                         const t = jsonT.response.body.items.item[0];
                         const l = jsonL.response.body.items.item[0];
-                        
-                        for(let i=4; i<=10; i++) {
-                            let wf = l['wf'+i+'Pm'] || l['wf'+i+'Am'] || l['wf'+i] || (i===4 ? (l['wf3Pm'] || "맑음") : "맑음");
-                            let pop = l['rnSt'+i+'Pm'] ?? l['rnSt'+i+'Am'] ?? l['rnSt'+i] ?? 0;
-                            let minT = t['taMin'+i] ?? (i > 3 ? t['taMin'+(i-1)] : undefined);
-                            let maxT = t['taMax'+i] ?? (i > 3 ? t['taMax'+(i-1)] : undefined);
-                            combinedData[i] = { min: minT, max: maxT, wf: wf, pop: pop };
-                            if (i === 4) {
-                                log(`combinedData[4] for ${loc.name}:`);
-                                log(combinedData[4]);
-                            }
+                        for(let i=3; i<=10; i++) {
+                            let wf = l['wf'+i] || "맑음";
+                            let pop = l['rnSt'+i] || 0;
+                            combinedData[i] = { min: t['taMin'+i], max: t['taMax'+i], wf: wf, pop: pop };
                         }
                     }
-                } catch(e) { log('Mid API Error: ' + e.message); }
-
-                let html = '';
-                for(let i=0; i<=10; i++) {
+                } catch(e) { log(`Mid API Error for ${loc.name}: ${e.message}`); }
+                
+                html += `<div class="weekly-grid">`;
+                for(let i=3; i<=10; i++) {
                     const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
                     const label = (d.getMonth()+1) + '/' + d.getDate();
                     const w = combinedData[i] || { wf: '-', min: '-', max: '-', pop: '-' };
-                    
-                    const wf = w.wf || "-";
                     let icon = '☀️';
-                    if(wf.includes('흐림')) icon='☁️';
-                    else if(wf.includes('구름') || wf.includes('많음')) icon='⛅';
-                    else if(wf.includes('비')) icon='🌧️';
-                    else if(wf.includes('눈')) icon='❄️';
-
-                    const minT = (w.min !== undefined && w.min !== 100) ? w.min : '-';
-                    const maxT = (w.max !== undefined && w.max !== -100) ? w.max : '-';
-                    const pop = (w.pop !== undefined) ? w.pop : 0;
-
-                    html += `<div class="col"><div class="time">${label}<br><span style="font-size:9px; color:#aaa;">+${i}D</span></div><div class="icon">${icon}</div><div class="temp"><span class="high">${maxT}</span>/<span class="low">${minT}</span></div><div class="precip ${pop>0?'precip-blue':''}">${pop}%</div></div>`;
+                    if(w.wf.includes('흐림')) icon='☁️'; else if(w.wf.includes('구름')) icon='⛅'; else if(w.wf.includes('비')) icon='🌧️'; else if(w.wf.includes('눈')) icon='❄️';
+                    html += `<div class="weekly-col"><div class="time">${label}</div><div class="icon">${icon}</div><div class="temp"><span class="high">${w.max}°</span> / <span class="low">${w.min}°</span></div><div class="precip ${w.pop>0?'precip-blue':''}">${w.pop}%</div></div>`;
                 }
-                targetContainer.innerHTML += `<div class="weather-section"><div class="loc-info"><span class="loc-name">${loc.n}</span><span class="loc-sub">${loc.sub}</span></div><div class="grid weekly-grid">${html}</div></div>`;
+                html += `</div>`;
+                const locationDiv = document.createElement('div');
+                locationDiv.className = 'weather-location-group';
+                locationDiv.innerHTML = `<div class="loc-info"><span class="loc-name">${loc.name}</span><span class="loc-sub">${loc.sub}</span></div>${html}`;
+                container.appendChild(locationDiv);
             }
         }
 
         function initCCTV() {
-            // CCTV functionality is temporarily disabled pending a fix for HLS proxying.
+            if(Hls.isSupported()) {
+                const streams = [
+                    { id: 'v1', url: 'http://211.114.96.121:1935/jejusi7/11-24.stream/playlist.m3u8' },
+                    { id: 'v2', url: 'http://119.65.216.155:1935/live/cctv03.stream_360p/playlist.m3u8' },
+                    { id: 'v3', url: 'http://119.65.216.155:1935/live/cctv05.stream_360p/playlist.m3u8' } 
+                ];
+                streams.forEach(s => {
+                    const video = document.getElementById(s.id);
+                    if(video) {
+                        const hls = new Hls();
+                        hls.loadSource(`/cctv/?url=${encodeURIComponent(s.url)}`);
+                        hls.attachMedia(video);
+                    }
+                });
+            }
         }
         
         async function initHallasan() {
-            log("Start initHallasan (Robust Mode)");
             const container = document.getElementById('hallasan-list');
             const statusSpan = document.getElementById('hallasan-status');
-            if(!container) return;
-
-            const dataUrl = 'https://jeju.go.kr/tool/hallasan/road-body.jsp';
-const proxyBase = '/proxy?url=';
-            
-            let res;
-            let usedSource = 'Direct';
-
             try {
-                log("Trying 1st (Direct): " + dataUrl);
-                res = await fetch(dataUrl);
-                if (!res.ok) throw new Error("Direct fetch failed: " + res.status);
-                usedSource = 'Direct Body';
-
-            } catch (e1) {
-                log("1st failed: " + e1.message);
-                
-                try {
-                    const proxyUrl = proxyBase + encodeURIComponent(dataUrl);
-                    log("Trying 2nd (Proxy Body): " + proxyUrl);
-                    res = await fetch(proxyUrl);
-                    if (!res.ok) throw new Error("Proxy body failed: " + res.status);
-                    usedSource = 'Proxy Body';
-                } catch (e2) {
-                    log("2nd failed: " + e2.message);
-
-                    try {
-                        const mainProxyUrl = proxyBase + encodeURIComponent(mainUrl);
-                        log("Trying 3rd (Proxy Main): " + mainProxyUrl);
-                        res = await fetch(mainProxyUrl);
-                        if (!res.ok) throw new Error("All sources failed");
-                        usedSource = 'Proxy Main';
-                    } catch (e3) {
-                        log("3rd failed: " + e3.message);
-                        container.innerHTML = `...`; // Error HTML
-                        if(statusSpan) statusSpan.innerText = "错误";
-                        return;
+                const res = await fetch('/hallasan');
+                if (!res.ok) throw new Error("Proxy fetch failed: " + res.status);
+                const text = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const trails = [
+                    { id: '어리목', name: '御里牧' }, { id: '영실', name: '灵室' },
+                    { id: '어승생악', name: '御乘生岳' }, { id: '돈내코', name: '顿乃克' },
+                    { id: '석굴암', name: '石窟庵' }, { id: '관음사', name: '观音寺' },
+                    { id: '성판악', name: '城板岳' }
+                ];
+                const getStatusCN = (st) => {
+                    if(st === '정상') return { t:'🟢 正常通行', c:'#4caf50' }; 
+                    if(st === '부분') return { t:'🟡 部分管制', c:'#ff9800' };
+                    if(st === '통제') return { t:'🔴 全面管制', c:'#f44336' }; 
+                    return { t:'⚪ 信息未知', c:'#999' }; 
+                };
+                let html = `<div class="trail-list">`; 
+                const dlList = doc.querySelectorAll('.main-visit-list');
+                trails.forEach(t => {
+                    let st = '확인불가';
+                    let targetDl = Array.from(dlList).find(dl => dl.textContent.includes(t.id.trim()));
+                    if (targetDl) {
+                        const statusText = targetDl.querySelector('.situation')?.textContent || targetDl.textContent;
+                        if (statusText.includes('정상')) st = '정상';
+                        else if (statusText.includes('통제')) st = '통제';
+                        else if (statusText.includes('부분')) st = '부분';
                     }
-                }
+                    const info = getStatusCN(st);
+                    html += `<div class="trail-item"><span class="trail-name">${t.name}</span><span class="trail-status" style="color:${info.c}; background:${info.c}1A; border: 1px solid ${info.c}30;">${info.t}</span></div>`;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+                if(statusSpan) statusSpan.innerText = "已更新";
+            } catch (e) {
+                log('Hallasan Error: ' + e.message);
+                if(statusSpan) statusSpan.innerText = "错误";
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
             }
-                
-            let text = '';
-            try {
-                const contentType = res.headers.get('content-type');
-                if (contentType && (contentType.includes('charset=euc-kr') || contentType.includes('charset=EUC-KR'))) {
-                    const buffer = await res.arrayBuffer();
-                    const decoder = new TextDecoder('euc-kr');
-                    text = decoder.decode(buffer);
-                } else {
-                    text = await res.text();
-                }
-            } catch (parseErr) {
-                log("Text decoding failed: " + parseErr.message);
-                return;
-            }
-
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            
-            const trails = [
-                { id: '어리목', name: '御里牧 (御里牧)' },
-                { id: '영실', name: '灵室 (灵室)' },
-                { id: '어승생악', name: '御乘生岳 (御乘生岳)' },
-                { id: '돈내코', name: '顿乃克 (顿乃克)' },
-                { id: '석굴암', name: '石窟庵 (石窟庵)' },
-                { id: '관음사', name: '观音寺 (观音寺)' },
-                { id: '성판악', name: '城板岳 (城板岳)' }
-            ];
-
-            const getStatusCN = (st) => {
-                if(st === '정상') return { t:'🟢 正常通行', c:'#4caf50' }; 
-                if(st === '부분') return { t:'🟡 部分管制', c:'#ff9800' };
-                if(st === '통제') return { t:'🔴 全面管制', c:'#f44336' }; 
-                return { t:'⚪ 信息未知', c:'#999' }; 
-            };
-
-            let html = `<div style="padding: 10px;">`; 
-            
-            const dlList = doc.querySelectorAll('.main-visit-list');
-            trails.forEach(t => {
-                let st = '확인불가';
-                let targetDl = Array.from(dlList).find(dl => dl.textContent.includes(t.id.trim()));
-
-                if (targetDl) {
-                    const statusText = targetDl.querySelector('.situation')?.textContent || targetDl.textContent;
-                    if (statusText.includes('정상')) st = '정상';
-                    else if (statusText.includes('통제')) st = '통제';
-                    else if (statusText.includes('부분')) st = '부분';
-                }
-                const info = getStatusCN(st);
-                html += `
-                    <div style="background:#f8f9fa; padding:12px 15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid #e9ecef; box-sizing:border-box; margin-bottom: 8px;">
-                        <span style="font-weight:800; font-size:13px; color:#2d3436; flex:1;">${t.name}</span>
-                        <span style="font-size:11px; font-weight:bold; color:${info.c}; background:${info.c}15; padding:4px 10px; border-radius:20px; border:1px solid ${info.c}30; white-space:nowrap;">${info.t}</span>
-                    </div>`;
-            });
-            html += '</div>';
-
-            html += `
-                <div style="padding: 0 10px 10px;">
-                    <a href="https://jeju.go.kr/hallasan/index.htm" target="_blank" 
-                       style="display:flex; align-items:center; justify-content:center; gap:5px; width:100%; background:#4a69bd; color:white; text-decoration:none; 
-                              padding:12px 0; border-radius:8px; text-align:center; font-weight:bold; font-size:13px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-                        🌐 访问汉拿山官网
-                    </a>
-                </div>`;
-            container.innerHTML = html;
-            if(statusSpan) statusSpan.innerText = "已更新";
         }
 
-        // 함수 실행 시작
-        initCCTV();
-        initDaily();
-        setTimeout(initWeekly, 1000);
-        setTimeout(initHallasan, 2000);
-        setTimeout(initDepartureFlights, 2500);
-        setTimeout(initArrivalFlights, 3000);
-
-        function createFlightItemHTML(flight, type) {
-            const rmk = flight.rmk || '';
-            const status = rmk.includes('지연') ? { t: '延误', c: '#ff9800' } : 
-                           rmk.includes('결항') ? { t: '取消', c: '#f44336' } :
-                           { t: rmk, c: '#2e7d32' };
-            
-            const route = type === 'dep' ? `目的地: ${flight.arrAirport}` : `出发地: ${flight.depAirport}`;
-
-            return `
-                <div class="flight-info-item">
-                    <div class="flight-details">
-                        <div class="flight-id-container">
-                            <span class="airline-tag">${flight.airline}</span>
-                            ${flight.flightId}
-                        </div>
-                        <div class="flight-route">${route}</div>
-                    </div>
-                    <div class="flight-status-container">
-                        <div class="flight-time">${flight.scheduledatetime.slice(-4, -2)}:${flight.scheduledatetime.slice(-2)}</div>
-                        <span class="flight-remark" style="color:${status.c};">${status.t}</span>
-                    </div>
-                </div>`;
-        }
-
-        async function fetchFlightData(url, containerId, statusId, type) {
-            const container = document.getElementById(containerId);
-            const statusSpan = document.getElementById(statusId);
-            if (!container || !statusSpan) return;
-
-            log(`Fetching ${type} flights from: ` + url);
-
+        async function fetchFlightData(flightType) {
+            const container = document.getElementById(flightType === 'dep' ? 'flight-list-dep' : 'flight-list-arr');
             try {
-                const res = await fetch(url);
+                const res = await fetch(`/flights/${flightType}?searchday=${todayStr}`);
                 const text = await res.text();
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(text, "text/xml");
-
-                const resultCodeNode = xmlDoc.querySelector("resultCode");
-                if (!resultCodeNode || resultCodeNode.textContent !== '00') {
-                    const msg = xmlDoc.querySelector("resultMsg")?.textContent || 'Unknown API Error';
-                    throw new Error(msg);
+                if (xmlDoc.querySelector("resultCode")?.textContent !== '00') {
+                    throw new Error(xmlDoc.querySelector("resultMsg")?.textContent || 'Unknown API Error');
                 }
-
                 const items = xmlDoc.querySelectorAll("item");
                 let relevantFlights = [];
                 items.forEach(item => {
@@ -771,7 +428,7 @@ const proxyBase = '/proxy?url=';
                     if (rmk.includes('지연') || rmk.includes('결항')) {
                         relevantFlights.push({
                             airline: item.querySelector("airline")?.textContent || '',
-                            flightId: item.querySelector("flightid")?.textContent || '', // Note: 'flightid' in response, not 'flightId'
+                            flightId: item.querySelector("flightid")?.textContent || '',
                             depAirport: item.querySelector("depAirport")?.textContent || '',
                             arrAirport: item.querySelector("arrAirport")?.textContent || '',
                             scheduledatetime: item.querySelector("scheduledatetime")?.textContent || '',
@@ -779,43 +436,33 @@ const proxyBase = '/proxy?url=';
                         });
                     }
                 });
-
                 if (relevantFlights.length > 0) {
-                    container.innerHTML = '<div style="padding: 10px;">' + relevantFlights.map(f => createFlightItemHTML(f, type)).join('') + '</div>';
-                    statusSpan.innerText = "已更新";
+                    container.innerHTML = relevantFlights.map(f => createFlightItemHTML(f, flightType)).join('');
                 } else {
-                    container.innerHTML = `<div style="padding:40px; text-align:center; color:#999; font-size:12px;">目前没有延误或取消的国际航班。</div>`;
-                    statusSpan.innerText = "无延误";
+                    container.innerHTML = `<div class="placeholder-text">目前没有延误或取消的国际航班。</div>`;
                 }
             } catch (e) {
-                log(`Flight Status Error (${type}): ${e.message}`);
-                container.innerHTML = `<div style="padding:40px; text-align:center; color:#999; font-size:12px;">获取信息失败: ${e.message}</div>`;
-                statusSpan.innerText = "错误";
+                log(`Flight Status Error (${flightType}): ${e.message}`);
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
             }
         }
-
-        async function initDepartureFlights() {
-            const depUrl = `/api?url=${encodeURIComponent(`http://openapi.airport.co.kr/service/rest/StatusOfFlights/getDepFlightStatusList?airport_code=CJU&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100`)}`;
-            await fetchFlightData(depUrl, 'flight-list-dep', 'flight-dep-status', 'dep');
+        
+        function createFlightItemHTML(flight, type) {
+            const rmk = flight.rmk || '';
+            const status = rmk.includes('지연') ? { t: '延误', c: '#ff9800' } : 
+                           rmk.includes('결항') ? { t: '取消', c: '#f44336' } :
+                           { t: rmk, c: '#2e7d32' };
+            const route = type === 'dep' ? `目的地: ${flight.arrAirport}` : `出发地: ${flight.depAirport}`;
+            return `<div class="flight-info-item"><div class="flight-details"><div class="airline-tag">${flight.airline}</div>${flight.flightId}</div><div class="flight-route">${route}</div><div class="flight-status-container"><div class="flight-time">${flight.scheduledatetime.slice(-4, -2)}:${flight.scheduledatetime.slice(-2)}</div><span class="flight-remark" style="color:${status.c};">${status.t}</span></div></div>`;
         }
-
-        async function initArrivalFlights() {
-            const arrUrl = `/api?url=${encodeURIComponent(`http://openapi.airport.co.kr/service/rest/StatusOfFlights/getArrFlightStatusList?arr_airport_code=CJU&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100`)}`;
-            await fetchFlightData(arrUrl, 'flight-list-arr', 'flight-arr-status', 'arr');
-        }
-
-        // 수동 새로고침 함수
-        function refreshDepartureFlights() {
-            const statusSpan = document.getElementById('flight-dep-status');
-            if(statusSpan) statusSpan.innerText = "刷新中...";
-            initDepartureFlights();
-        }
-
-        function refreshArrivalFlights() {
-            const statusSpan = document.getElementById('flight-arr-status');
-            if(statusSpan) statusSpan.innerText = "刷新中...";
-            initArrivalFlights();
-        }
+        
+        // --- Execute all initialization functions ---
+        initCCTV();
+        initDaily();
+        initWeekly();
+        initHallasan();
+        fetchFlightData('dep');
+        fetchFlightData('arr');
     </script>
 </body>
 </html>
