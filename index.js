@@ -1,4 +1,3 @@
-
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event).catch(
     (err) => new Response(err.stack, { status: 500 })
@@ -9,6 +8,15 @@ async function handleRequest(event) {
   const request = event.request;
   const url = new URL(request.url);
   const pathname = url.pathname;
+
+  // Explicitly serve the HTML for the root path by fetching it from GitHub
+  if (pathname === '/') {
+    const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html';
+    const response = await fetch(githubUrl);
+    return new Response(response.body, {
+      headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+    });
+  }
 
   let targetUrl;
 
@@ -50,7 +58,6 @@ async function handleRequest(event) {
     if (!targetUrl) return new Response('CCTV URL not provided', { status: 400 });
   }
   else {
-    // This should only be hit if the request is not for a static file and not for an API route.
     return new Response('API endpoint not found.', { status: 404 });
   }
 
