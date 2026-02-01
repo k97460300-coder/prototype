@@ -165,6 +165,90 @@
             color: var(--muted-text-color); border: 1px dashed var(--border-color);
         }
         .app-footer { text-align: center; padding: 30px 20px; font-size: 0.9rem; color: var(--muted-text-color); }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .main-header { padding: 30px 15px; }
+            .main-header h1 { font-size: 2rem; }
+            .main-header p { font-size: 1rem; }
+            .container { padding: 15px; }
+            .section-header { font-size: 1.3rem; padding: 12px 15px; }
+            .section-header .icon { font-size: 1.5rem; margin-right: 10px; }
+            .section-content { padding: 15px; }
+
+            .cctv-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+            .weather-grid-container {
+                grid-template-columns: 1fr; /* Stack weather cards on smaller screens */
+            }
+            .weather-location-group { margin-bottom: 15px; }
+
+            .flight-info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+            .flight-details { width: 100%; margin-bottom: 5px; }
+            .flight-route { margin-left: 0; margin-top: 5px; }
+            .flight-status-container { width: 100%; text-align: left; margin-top: 5px; }
+        }
+
+        @media (max-width: 480px) {
+            .main-header h1 { font-size: 1.8rem; }
+            .main-header p { font-size: 0.9rem; }
+            .section-header h2 { font-size: 1.1rem; }
+            .section-header .icon { font-size: 1.3rem; }
+            .vid-label { font-size: 0.9rem; }
+            .live-tag { font-size: 9px; padding: 1px 4px; }
+
+            .hourly-col { flex: 0 0 60px; }
+            .weekly-col { flex: 0 0 65px; }
+
+            .trail-item { padding: 10px; }
+            .trail-name { font-size: 1rem; }
+            .trail-status { font-size: 0.8rem; padding: 4px 10px; }
+        }
+
+        /* Accordion Specific Styles */
+        .accordion-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .accordion-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+            margin-left: 10px;
+        }
+        .accordion-content {
+            display: none; /* Hidden by default */
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            background-color: #fcfcfc; /* Slightly different background for content */
+        }
+        .accordion-content ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .accordion-content ul li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .accordion-content ul li:last-child {
+            border-bottom: none;
+        }
+        .accordion-content h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+        .accordion-content p {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -229,6 +313,61 @@
                 <div class="flight-list" id="flight-list-arr"><div class="placeholder-text">正在获取到达信息...</div></div>
             </div>
         </section>
+
+        <!-- New sections for Chinese tourists -->
+        <section class="info-section accordion-section" id="payment-info">
+            <div class="section-header accordion-toggle">
+                <span class="icon">💳</span><h2>支付信息</h2><span class="accordion-icon">▼</span>
+            </div>
+            <div class="section-content accordion-content">
+                <p>在济州岛，主要商业区和旅游景点普遍支持移动支付。支付宝 (Alipay) 和 微信支付 (WeChat Pay) 可以在许多商店、餐馆和免税店使用。建议携带少量韩元现金以备不时之需。</p>
+            </div>
+        </section>
+
+        <section class="info-section accordion-section" id="recommendations">
+            <div class="section-header accordion-toggle">
+                <span class="icon">⭐</span><h2>热门推荐</h2><span class="accordion-icon">▼</span>
+            </div>
+            <div class="section-content accordion-content">
+                <h3>景点 (Jǐngdiǎn)</h3>
+                <ul>
+                    <li>汉拿山 (Hànnáshān)</li>
+                    <li>城山日出峰 (Chéngshān Rìchū Fēng)</li>
+                    <li>牛岛 (Niúdǎo)</li>
+                    <li>泰迪熊博物馆 (Tàdíxióng Bówùguǎn)</li>
+                    <li>偶来小路 (Ǒu lái Xiǎolù)</li>
+                </ul>
+                <h3>美食 (Měishí)</h3>
+                <ul>
+                    <li>黑猪肉 (Hēizhūròu)</li>
+                    <li>海鲜锅 (Hǎixiānguō)</li>
+                    <li>鲍鱼粥 (Bàoyú Zhōu)</li>
+                    <li>橘子 (Júzi)</li>
+                    <li>炸鸡啤酒 (Zhájī Píjiǔ)</li>
+                </ul>
+                <h3>购物 (Gòuwù)</h3>
+                <ul>
+                    <li>新罗免税店 (Xīnlüo Miǎnshuì Diàn)</li>
+                    <li>乐天免税店 (Lètiān Miǎnshuì Diàn)</li>
+                    <li>东门市场 (Dōngmén Shìchǎng)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="info-section accordion-section" id="emergency-contacts">
+            <div class="section-header accordion-toggle">
+                <span class="icon">🚨</span><h2>紧急联系</h2><span class="accordion-icon">▼</span>
+            </div>
+            <div class="section-content accordion-content">
+                <ul>
+                    <li>**中国驻济州总领事馆 (Zhōngguó Zhù Jìzhōu Zǒnglǐngshìguǎn)**: +82-64-749-8805</li>
+                    <li>**旅游咨询热线 (Lǚyóu Zīxún Rèxiàn)**: 1330 (提供中文服务)</li>
+                    <li>**报警 (Bàojǐng)**: 112</li>
+                    <li>**急救/消防 (Jíjiù/Xiāofáng)**: 119</li>
+                    <li>**济州国际机场 (Jìzhōu Guójì Jīchǎng)**: +82-64-797-2525</li>
+                </ul>
+            </div>
+        </section>
     </main>
 
     <footer class="app-footer">
@@ -237,6 +376,21 @@
     </footer>
 
     <script>
+        // Accordion functionality
+        document.querySelectorAll('.accordion-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('.accordion-icon');
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    content.style.display = 'block';
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+        
         function log(msg) { console.log(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg); }
 
         const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce';
