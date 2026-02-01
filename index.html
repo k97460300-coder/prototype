@@ -239,6 +239,9 @@
     <script>
         function log(msg) { console.log(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg); }
 
+        const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce';
+        const PUBLIC_CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth()+1).padStart(2,'0'); 
@@ -269,7 +272,8 @@
             }
             for (const loc of locs) {
                 try {
-                    const res = await fetch(`/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`);
+                    const apiUrl = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${MASTER_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${loc.x}&ny=${loc.y}`;
+                    const res = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(apiUrl));
                     const json = await res.json();
                     const hourly = {};
                     if(json.response && json.response.header.resultCode === '00'){
@@ -323,7 +327,8 @@
                         baseDate = getFormatDate(yD);
                         baseTime = "2300";
                     }
-                    const resS = await fetch(`/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.nx}&ny=${loc.ny}`);
+                    const urlS = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${MASTER_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${loc.nx}&ny=${loc.ny}`;
+                    const resS = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(urlS));
                     const jsonS = await resS.json();
                     
                     if (jsonS.response && jsonS.response.header.resultCode === '00') {
@@ -357,8 +362,11 @@
                     else if (h < 18 || (h === 18 && m < 15)) { midTmFc = todayStr + '0600'; } 
                     else { midTmFc = todayStr + '1800'; }
 
-                    const resT = await fetch(`/weather/mid-temp?regId=${loc.regIdTemp}&tmFc=${midTmFc}`); const jsonT = await resT.json();
-                    const resL = await fetch(`/weather/mid-land?regId=${loc.regIdLand}&tmFc=${midTmFc}`); const jsonL = await resL.json();
+                    const urlT = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?serviceKey=${MASTER_KEY}&dataType=JSON&regId=${loc.regIdTemp}&tmFc=${midTmFc}`;
+                    const urlL = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?serviceKey=${MASTER_KEY}&dataType=JSON&regId=${loc.regIdLand}&tmFc=${midTmFc}`;
+                    
+                    const resT = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(urlT)); const jsonT = await resT.json();
+                    const resL = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(urlL)); const jsonL = await resL.json();
                     if(jsonT.response && jsonL.response && jsonT.response.header.resultCode === '00' && jsonL.response.header.resultCode === '00') {
                         const t = jsonT.response.body.items.item[0];
                         const l = jsonL.response.body.items.item[0];
@@ -400,7 +408,7 @@
                     const video = document.getElementById(s.id);
                     if(video) {
                         const hls = new Hls();
-                        hls.loadSource(`/cctv/?url=${encodeURIComponent(s.url)}`);
+                        hls.loadSource(PUBLIC_CORS_PROXY + encodeURIComponent(s.url));
                         hls.attachMedia(video);
                     }
                 });
@@ -411,7 +419,8 @@
             const container = document.getElementById('hallasan-list');
             const statusSpan = document.getElementById('hallasan-status');
             try {
-                const res = await fetch('/hallasan');
+                const dataUrl = 'https://jeju.go.kr/tool/hallasan/road-body.jsp';
+                const res = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(dataUrl));
                 if (!res.ok) throw new Error("Proxy fetch failed: " + res.status);
                 const text = await res.text();
                 const parser = new DOMParser();
@@ -455,7 +464,11 @@
         async function fetchFlightData(flightType) {
             const container = document.getElementById(flightType === 'dep' ? 'flight-list-dep' : 'flight-list-arr');
             try {
-                const res = await fetch(`/flights/${flightType}?searchday=${todayStr}`);
+                const endpoint = flightType === 'dep' ? 'getDepFlightStatusList' : 'getArrFlightStatusList';
+                const airportParam = flightType === 'dep' ? 'airport_code=CJU' : 'arr_airport_code=CJU';
+                const apiUrl = `http://openapi.airport.co.kr/service/rest/StatusOfFlights/${endpoint}?${airportParam}&line=I&searchday=${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100&serviceKey=${MASTER_KEY}`;
+
+                const res = await fetch(PUBLIC_CORS_PROXY + encodeURIComponent(apiUrl));
                 const text = await res.text();
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(text, "text/xml");
@@ -505,5 +518,6 @@
         fetchFlightData('dep');
         fetchFlightData('arr');
     </script>
+    <!-- Cloudflare Pages Build Trigger -->
 </body>
 </html>
