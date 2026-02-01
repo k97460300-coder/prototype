@@ -1,3 +1,4 @@
+
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event).catch(
     (err) => new Response(err.stack, { status: 500 })
@@ -9,8 +10,15 @@ async function handleRequest(event) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // This worker should ONLY handle API calls.
-  // The static index.html is served by the [site] configuration in wrangler.toml
+  // For a pure Worker project, we must handle the root path ourselves.
+  // Fetch the latest index.html from the main branch on GitHub.
+  if (pathname === '/') {
+    const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html?v=' + Date.now();
+    const response = await fetch(githubUrl);
+    return new Response(response.body, {
+      headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+    });
+  }
 
   let targetUrl;
   const newHeaders = new Headers(request.headers);
@@ -35,6 +43,7 @@ async function handleRequest(event) {
     } else {
       return new Response('Invalid weather API type', { status: 400 });
     }
+    // MASTER_KEY is a global variable from secrets in the deployed environment
     targetUrl = `${endpoint}&serviceKey=${MASTER_KEY}`;
   } 
   else if (pathname.startsWith('/flights/')) {
@@ -50,10 +59,11 @@ async function handleRequest(event) {
   else if (pathname.startsWith('/cctv/')) {
     targetUrl = url.searchParams.get('url');
     if (!targetUrl) return new Response('CCTV URL not provided', { status: 400 });
+    // Spoof User-Agent to bypass anti-hotlinking measures
     newHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
   }
   else {
-    return new Response('API endpoint not found. This request should have been served a static file.', { status: 404 });
+    return new Response('API endpoint not found.', { status: 404 });
   }
 
   // --- Generic Proxy Logic ---

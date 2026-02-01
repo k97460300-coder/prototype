@@ -1,7 +1,4 @@
-name = "prototype1"
+name = "prototype"
 main = "index.js"
 account_id = "2952a38a59e8d419aefa3c409c5cdf3a"
 compatibility_date = "2026-01-30"
-
-[site]
-bucket = "."
