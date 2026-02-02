@@ -13,7 +13,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>济州岛实时天气与旅行信息</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
@@ -182,7 +182,7 @@
             padding: 2px 6px; font-size: 10px; border-radius: 3px; z-index: 10;
             animation: blink 1.5s infinite; font-weight: bold;
         }
-        @keyframes blink { 0%, 100% {opacity: 1;} 50% {opacity: 0.6;} } 
+        @keyframes blink { 0%, 100% {opacity: 1;} 50% {opacity: 0.6;} }
         video { width: 100%; height: 100%; object-fit: cover; }
 
         .weather-grid-container {
@@ -371,8 +371,6 @@
 
     <script>
         function log(msg) { console.log(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg); }
-
-        const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce';
         
         const now = new Date();
         const yyyy = now.getFullYear();
@@ -411,6 +409,9 @@
                 // Fetch initial messages
                 try {
                     const response = await fetch('/chat/messages');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
                     const initialMessages = await response.json();
                     chatMessages.innerHTML = '';
                     initialMessages.forEach(addMessage);
@@ -530,27 +531,232 @@
         }
 
         async function initWeekly() {
-            // ... (rest of the functions remain the same)
+            const container = document.getElementById('weekly-forecasts');
+            container.innerHTML = '';
+            const locs = [
+                { name: "济州市", sub: "Jeju City", regIdTemp: '11G00201', regIdLand: '11G00000', nx: 52, ny: 38 },
+                { name: "西归浦", sub: "Seogwipo", regIdTemp: '11G00401', regIdLand: '11G00000', nx: 52, ny: 32 },
+                { name: "汉拿山", sub: "Halla Mtn.", regIdTemp: '11G00401', regIdLand: '11G00000', nx: 52, ny: 35 },
+                { name: "牛岛", sub: "Udo Island", regIdTemp: '11G00302', regIdLand: '11G00000', nx: 60, ny: 38 }
+            ];
+
+            for (const loc of locs) {
+                let combinedData = {};
+                
+                try {
+                    let baseDate = todayStr, baseTime = "0200";
+                    if (now.getHours() < 3) {
+                        const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
+                        baseDate = getFormatDate(yD);
+                        baseTime = "2300";
+                    }
+                    const urlS = `/weather/short?base_date=${baseDate}&base_time=${baseTime}&nx=${loc.nx}&ny=${loc.ny}`; // Call worker endpoint
+                    const resS = await fetch(urlS);
+                    const jsonS = await resS.json();
+                    
+                    if (jsonS.response && jsonS.response.header.resultCode === '00') {
+                        const dailyData = {};
+                        jsonS.response.body.items.item.forEach(it => {
+                            const date = it.fcstDate;
+                            if (!dailyData[date]) dailyData[date] = { TMN: 100, TMX: -100, SKY: [], PTY: [] };
+                            if (it.category === 'TMN') dailyData[date].TMN = Math.min(dailyData[date].TMN, parseFloat(it.fcstValue));
+                            if (it.category === 'TMX') dailyData[date].TMX = Math.max(dailyData[date].TMX, parseFloat(it.fcstValue));
+                            if (it.category === 'SKY') dailyData[date].SKY.push(it.fcstValue);
+                            if (it.category === 'PTY') dailyData[date].PTY.push(it.fcstValue);
+                        });
+
+                        for(let i=0; i < 3; i++) {
+                            const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
+                            const dStr = getFormatDate(d);
+                            const data = dailyData[dStr];
+                            if(data) {
+                                let wf = "맑음";
+                                if (data.PTY.some(p => p > 0)) wf = "비/눈";
+                                else if (data.SKY.some(s => s > 5)) wf = "흐림";
+                                combinedData[i] = { min: data.TMN, max: data.TMX, wf: wf, pop: 0 };
+                            }
+                        }
+                    }
+                } catch(e) { log(`Weekly (Short) Error for ${loc.name}: ${e.message}`); }
+
+                try {
+                    let h = now.getHours(), m = now.getMinutes(), midTmFc;
+                    if (h < 6 || (h === 6 && m < 15)) { const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1); midTmFc = getFormatDate(yD) + '1800';} 
+                    else if (h < 18 || (h === 18 && m < 15)) { midTmFc = todayStr + '0600'; } 
+                    else { midTmFc = todayStr + '1800'; }
+
+                    const urlT = `/weather/mid-temp?regId=${loc.regIdTemp}&tmFc=${midTmFc}`; // Call worker endpoint
+                    const urlL = `/weather/mid-land?regId=${loc.regIdLand}&tmFc=${midTmFc}`; // Call worker endpoint
+                    
+                    const resT = await fetch(urlT); const jsonT = await resT.json();
+                    const resL = await fetch(urlL); const jsonL = await resL.json();
+                    if(jsonT.response && jsonL.response && jsonT.response.header.resultCode === '00' && jsonL.response.header.resultCode === '00') {
+                        const t = jsonT.response.body.items.item[0];
+                        const l = jsonL.response.body.items.item[0];
+                        for(let i=3; i<=10; i++) {
+                            let wf = l['wf'+i] || "맑음";
+                            let pop = l['rnSt'+i] || 0;
+                            combinedData[i] = { min: t['taMin'+i], max: t['taMax'+i], wf: wf, pop: pop };
+                        }
+                    }
+                } catch(e) { log(`Weekly (Mid) Error for ${loc.name}: ${e.message}`); }
+                
+                let html = `<div class="weekly-grid">`;
+                for(let i=0; i<=10; i++) {
+                    const d = new Date(yyyy, now.getMonth(), now.getDate() + i);
+                    const label = (d.getMonth()+1) + '/' + d.getDate();
+                    const w = combinedData[i] || { wf: '-', min: '-', max: '-', pop: '-' };
+                    let icon = '☀️';
+                    if(w.wf.includes('흐림')) icon='☁️'; else if(w.wf.includes('구름')) icon='⛅'; else if(w.wf.includes('비')) icon='🌧️'; else if(w.wf.includes('눈')) icon='❄️';
+                    const minTemp = w.min === 100 ? '-' : w.min;
+                    const maxTemp = w.max === -100 ? '-' : w.max;
+                    html += `<div class="weekly-col"><div class="time">${label}</div><div class="icon">${icon}</div><div class="temp"><span class="high">${maxTemp}°</span> / <span class="low">${minTemp}°</span></div><div class="precip ${w.pop>0?'precip-blue':''}">${w.pop}%</div></div>`;
+                }
+                html += `</div>`;
+                const locationDiv = document.createElement('div');
+                locationDiv.className = 'weather-location-group';
+                locationDiv.innerHTML = `<div class="loc-info"><span class="loc-name">${loc.name}</span><span class="loc-sub">${loc.sub}</span></div>${html}`;
+                container.appendChild(locationDiv);
+            }
         }
 
         function initCCTV() {
-            // ...
+            if(Hls.isSupported()) {
+                const streams = [
+                    { id: 'v1', url: 'http://211.114.96.121:1935/jejusi7/11-24.stream/playlist.m3u8' },
+                    { id: 'v2', url: 'http://119.65.216.155:1935/live/cctv03.stream_360p/playlist.m3u8' },
+                    { id: 'v3', url: 'http://119.65.216.155:1935/live/cctv05.stream_360p/playlist.m3u8' } 
+                ];
+                streams.forEach(s => {
+                    const video = document.getElementById(s.id);
+                    if(video) {
+                        const hls = new Hls();
+                        hls.loadSource(`/cctv/?url=${encodeURIComponent(s.url)}`); // Call worker endpoint
+                        hls.attachMedia(video);
+                    }
+                });
+            }
         }
         
         async function initHallasan() {
-            // ...
+            const container = document.getElementById('hallasan-list');
+            const statusSpan = document.getElementById('hallasan-status');
+            try {
+                const res = await fetch('/hallasan'); // Call worker endpoint
+                if (!res.ok) throw new Error("Worker fetch failed: " + res.status);
+                const text = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const trails = [
+                    { id: '어리목', name: '御里牧' }, { id: '영실', name: '灵室' },
+                    { id: '어승생악', name: '御乘生岳' }, { id: '돈내코', name: '顿乃克' },
+                    { id: '석굴암', name: '石窟庵' }, { id: '관음사', name: '观音寺' },
+                    { id: '성판악', name: '城板岳' }
+                ];
+                const getStatusCN = (st) => {
+                    if(st === '정상') return { t:'🟢 正常通行', c:'#4caf50' }; 
+                    if(st === '부분') return { t:'🟡 部分管制', c:'#ff9800' };
+                    if(st === '통제') return { t:'🔴 全面管制', c:'#f44336' }; 
+                    return { t:'⚪ 信息未知', c:'#999' }; 
+                };
+                let html = `<div class="trail-list">`; 
+                const dlList = doc.querySelectorAll('.main-visit-list');
+                trails.forEach(t => {
+                    let st = '확인불가';
+                    let targetDl = Array.from(dlList).find(dl => dl.textContent.includes(t.id.trim()));
+                    if (targetDl) {
+                        const statusText = targetDl.querySelector('.situation')?.textContent || targetDl.textContent;
+                        if (statusText.includes('정상')) st = '정상';
+                        else if (statusText.includes('통제')) st = '통제';
+                        else if (statusText.includes('부분')) st = '부분';
+                    }
+                    const info = getStatusCN(st);
+                    html += `<div class="trail-item"><span class="trail-name">${t.name}</span><span class="trail-status" style="color:${info.c}; background:${info.c}1A; border: 1px solid ${info.c}30;">${info.t}</span></div>`;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+                if(statusSpan) statusSpan.innerText = "已更新";
+            } catch (e) {
+                log('Hallasan Error: ' + e.message);
+                if(statusSpan) statusSpan.innerText = "错误";
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
+            }
         }
 
         async function fetchFlightData(flightType) {
-            // ...
+            const container = document.getElementById(flightType === 'dep' ? 'flight-list-dep' : 'flight-list-arr');
+            try {
+                const apiUrl = `/flights/${flightType}?searchday=${todayStr}`; // Call worker endpoint
+                const res = await fetch(apiUrl);
+                const text = await res.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "text/xml");
+                if (xmlDoc.querySelector("resultCode")?.textContent !== '00') {
+                    throw new Error(xmlDoc.querySelector("resultMsg")?.textContent || 'Unknown API Error');
+                }
+                const items = xmlDoc.querySelectorAll("item");
+                let relevantFlights = [];
+                items.forEach(item => {
+                    const rmk = item.querySelector("rmk")?.textContent || '';
+                    if (rmk.includes('지연') || rmk.includes('결항')) {
+                        relevantFlights.push({
+                            airline: item.querySelector("airline")?.textContent || '',
+                            flightId: item.querySelector("flightid")?.textContent || '',
+                            depAirport: item.querySelector("depAirport")?.textContent || '',
+                            arrAirport: item.querySelector("arrAirport")?.textContent || '',
+                            scheduledatetime: item.querySelector("scheduledatetime")?.textContent || '',
+                            rmk: rmk
+                        });
+                    }
+                });
+                if (relevantFlights.length > 0) {
+                    container.innerHTML = relevantFlights.map(f => createFlightItemHTML(f, flightType)).join('');
+                } else {
+                    container.innerHTML = `<div class="placeholder-text">目前没有延误或取消的国际航班。</div>`;
+                }
+            } catch (e) {
+                log(`Flight Status Error (${flightType}): ${e.message}`);
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
+            }
         }
         
         function createFlightItemHTML(flight, type) {
-            // ...
+            const rmk = flight.rmk || '';
+            const status = rmk.includes('지연') ? { t: '延误', c: '#ff9800' } : 
+                           rmk.includes('결항') ? { t: '取消', c: '#f44336' } :
+                           { t: rmk, c: '#2e7d32' };
+            const route = type === 'dep' ? `目的地: ${flight.arrAirport}` : `出发地: ${flight.depAirport}`;
+            return `<div class="flight-info-item"><div class="flight-details"><div class="airline-tag">${flight.airline}</div>${flight.flightId}</div><div class="flight-route">${route}</div><div class="flight-status-container"><div class="flight-time">${flight.scheduledatetime.slice(-4, -2)}:${flight.scheduledatetime.slice(-2)}</div><span class="flight-remark" style="color:${status.c};">${status.t}</span></div></div>`;
         }
 
         async function initFestivals() {
-            // ...
+            const container = document.getElementById('festivals-list');
+            try {
+                const res = await fetch('/festivals');
+                const data = await res.json();
+                if (data.result === '200' && data.items && data.items.length > 0) {
+                    let html = '<div class="festival-grid">';
+                    data.items.forEach(item => {
+                        const photoUrl = item.repPhoto?.photoid?.imgpath || 'https://via.placeholder.com/400x300?text=No+Image';
+                        html += `
+                            <div class="festival-item">
+                                <img src="${photoUrl}" alt="${item.title}" class="festival-img">
+                                <div class="festival-content">
+                                    <h3 class="festival-title">${item.title}</h3>
+                                    <p class="festival-intro">${item.introduction || ''}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div class="placeholder-text">${data.resultMessage || '当前没有节庆活动信息。'}</div>`;
+                }
+            } catch (e) {
+                log(`Festivals Error: ${e.message}`);
+                container.innerHTML = `<div class="placeholder-text">获取信息失败: ${e.message}</div>`;
+            }
         }
         
         function refreshSection(sectionId) {
