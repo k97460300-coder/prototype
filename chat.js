@@ -18,7 +18,7 @@ export class ChatRoom {
   async fetch(request) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/websocket') {
+    if (url.pathname === '/chat/websocket') {
       // This is a WebSocket upgrade request.
       const pair = new WebSocketPair();
       const [client, server] = Object.values(pair);
@@ -27,7 +27,7 @@ export class ChatRoom {
       this.handleSession(server);
 
       return new Response(null, { status: 101, webSocket: client });
-    } else if (url.pathname === '/messages') {
+    } else if (url.pathname === '/chat/messages') {
         // Return current messages for new users
         return new Response(JSON.stringify(this.messages), {
             headers: { 'Content-Type': 'application/json' },
