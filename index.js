@@ -1,672 +1,88 @@
 import { ChatRoom } from './chat.js';
 
-// The entire HTML content is now bundled into the script.
-const htmlContent = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-5GPGKT9B');</script>
-    <!-- End Google Tag Manager -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>济州岛实时天气与旅行信息</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <style>
-        :root {
-            --primary-color: #0056b3;
-            --secondary-color: #007bff;
-            --background-color: #f8f9fa;
-            --surface-color: #ffffff;
-            --text-color: #333;
-            --muted-text-color: #6c757d;
-            --border-color: #dee2e6;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            --border-radius: 12px;
-        }
-        
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            background-color: var(--background-color);
-            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-
-        .main-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        .main-header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            font-weight: 900;
-        }
-        .main-header p {
-            margin: 10px 0 0;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .info-section {
-            background-color: var(--surface-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-        .section-header {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-        .section-header .icon {
-            font-size: 1.8rem;
-            margin-right: 15px;
-            color: var(--primary-color);
-        }
-        .section-header .badge {
-            font-size: 0.8rem;
-            margin-left: auto;
-            padding: 5px 12px;
-            border-radius: 20px;
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            font-weight: bold;
-        }
-         .section-header .refresh-icon {
-            cursor: pointer;
-            font-size: 1.2rem;
-            color: var(--muted-text-color);
-            transition: transform 0.3s ease;
-            margin-left: 10px;
-        }
-        .section-header .refresh-icon:hover {
-            transform: rotate(90deg);
-            color: var(--primary-color);
-        }
-        .section-content { padding: 20px; }
-        
-        /* Chat Styles */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 400px;
-        }
-        .chat-messages {
-            flex-grow: 1;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            overflow-y: auto;
-            background: #fdfdfd;
-            margin-bottom: 15px;
-        }
-        .chat-message {
-            margin-bottom: 10px;
-        }
-        .chat-message .name {
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-        .chat-message .timestamp {
-            font-size: 0.75rem;
-            color: var(--muted-text-color);
-            margin-left: 8px;
-        }
-        .chat-message .text {
-            margin-top: 2px;
-        }
-        .chat-inputs {
-            display: flex;
-            gap: 10px;
-        }
-        .chat-inputs input {
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            border-radius: 5px;
-            font-family: inherit;
-            font-size: 1rem;
-        }
-        .chat-inputs input#chat-name {
-            flex-basis: 150px;
-        }
-        .chat-inputs input#chat-message-input {
-            flex-grow: 1;
-        }
-        .chat-inputs button {
-            border: none;
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 0 25px;
-            font-size: 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .chat-inputs button:hover {
-            background-color: var(--primary-color);
-        }
-
-        .cctv-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-        }
-        .video-box {
-            position: relative; width: 100%; aspect-ratio: 16/9;
-            background: #000; border-radius: 8px; overflow: hidden;
-            display: flex; align-items: center; justify-content: center; color: white;
-        }
-        .vid-label {
-            position: absolute; bottom: 10px; left: 10px;
-            font-weight: bold; font-size: 1rem; text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
-        }
-        .live-tag {
-            position: absolute; top: 10px; left: 10px; background: #ff5252; color: white;
-            padding: 2px 6px; font-size: 10px; border-radius: 3px; z-index: 10;
-            animation: blink 1.5s infinite; font-weight: bold;
-        }
-        @keyframes blink { 0%, 100% {opacity: 1;} 50% {opacity: 0.6;} }
-        video { width: 100%; height: 100%; object-fit: cover; }
-
-        .weather-grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-        }
-        .weather-location-group { margin-bottom: 20px; }
-        .loc-info { margin-bottom: 15px; }
-        .loc-name { font-size: 1.3rem; font-weight: 700; }
-        .loc-sub { font-size: 0.9rem; color: var(--muted-text-color); margin-left: 8px; }
-        .hourly-grid { display: flex; overflow-x: auto; padding-bottom: 15px; }
-        .hourly-col { flex: 0 0 70px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 5px; }
-        .time { font-size: 0.85rem; color: var(--muted-text-color); font-weight: bold; margin-bottom: 8px; }
-        .icon { font-size: 1.8rem; margin-bottom: 8px; }
-        .temp { font-size: 1.1rem; font-weight: 700; }
-        .precip { font-size: 0.9rem; color: #546e7a; margin-top: 5px; }
-        .precip-blue { color: var(--secondary-color); font-weight: bold; }
-
-        .weekly-grid { display: flex; overflow-x: auto; padding-bottom: 15px; }
-        .weekly-col { flex: 0 0 75px; text-align: center; }
-        .high { color: #d32f2f; } .low { color: #1976d2; }
-        
-        .trail-list { display: flex; flex-direction: column; gap: 10px; }
-        .trail-item {
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--background-color); padding: 15px; border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        .trail-name { font-weight: 700; font-size: 1.1rem; }
-        .trail-status { font-size: 0.9rem; font-weight: bold; padding: 5px 12px; border-radius: 15px; }
-
-        .flight-list { display: flex; flex-direction: column; gap: 12px; }
-        .flight-info-item {
-            display: flex; align-items: center; padding: 12px;
-            background: var(--background-color); border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        .flight-details { flex-grow: 1; }
-        .airline-tag { background-color: var(--primary-color); color: white; font-size: 0.8rem; font-weight: bold; padding: 3px 8px; border-radius: 5px; margin-right: 8px;}
-        .flight-route { font-size: 0.9rem; color: var(--muted-text-color); margin-top: 4px; }
-        .flight-status-container { text-align: right; }
-        .flight-time { font-size: 1.1rem; font-weight: 700; }
-        .flight-remark { font-size: 0.9rem; font-weight: bold; }
-
-        .placeholder-text { padding: 40px; text-align: center; color: var(--muted-text-color); }
-        .app-footer { text-align: center; padding: 30px 20px; font-size: 0.9rem; color: var(--muted-text-color); }
-
-        .global-refresh-button {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: background-color 0.3s ease;
-        }
-
-        .global-refresh-button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            .main-header { padding: 30px 15px; }
-            .main-header h1 { font-size: 2rem; }
-            .main-header p { font-size: 1rem; }
-            .container { padding: 15px; }
-            .section-header { font-size: 1.3rem; padding: 12px 15px; }
-            .section-header .icon { font-size: 1.5rem; margin-right: 10px; }
-            .section-content { padding: 15px; }
-
-            .cctv-grid {
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            }
-            .weather-grid-container {
-                grid-template-columns: 1fr;
-            }
-            .flight-info-item {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 10px;
-            }
-            .flight-details { width: 100%; margin-bottom: 5px; }
-            .flight-route { margin-left: 0; margin-top: 5px; }
-            .flight-status-container { width: 100%; text-align: left; margin-top: 5px; }
-        }
-    </style>
-</head>
-<body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5GPGKT9B"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    <header class="main-header">
-        <h1>济州岛实时旅行信息</h1>
-        <p>专为游客设计的实时天气、交通与实用信息聚合平台</p>
-        <button class="global-refresh-button" onclick="refreshAllSections()">全部刷新</button>
-    </header>
-
-    <main class="container">
-        <section class="info-section" id="chat">
-            <div class="section-header">
-                <span class="icon">💬</span><h2>실시간 방문객 채팅</h2>
-            </div>
-            <div class="section-content">
-                <div class="chat-container">
-                    <div class="chat-messages" id="chat-messages">
-                        <div class="placeholder-text">채팅 메시지를 불러오는 중...</div>
-                    </div>
-                    <div class="chat-inputs">
-                        <input type="text" id="chat-name" placeholder="이름">
-                        <input type="text" id="chat-message-input" placeholder="메시지를 입력하세요...">
-                        <button id="chat-send-button">전송</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="info-section" id="cctv">
-            <div class="section-header">
-                <span class="icon">📹</span><h2>济州岛实况 (实时监控)</h2><span class="refresh-icon" onclick="refreshSection('cctv')">🔄</span>
-            </div>
-            <div class="section-content">
-                <div class="cctv-grid">
-                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏝️ 牛岛 (天津港)</div><video id="v1" autoplay muted playsinline></video></div>
-                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🏔️ 汉拿山 (御势岳)</div><video id="v2" autoplay muted playsinline></video></div>
-                    <div class="video-box"><div class="live-tag">LIVE</div><div class="vid-label">🛣️ 1100高地 (1100公路)</div><video id="v3" autoplay muted playsinline></video></div>
-                </div>
-            </div>
-        </section>
-
-
-        <section class="info-section" id="weather">
-            <div class="section-header">
-                <span class="icon">☀️</span><h2>今日逐时预报</h2><span class="badge" id="date-label"></span><span class="refresh-icon" onclick="refreshSection('weather')">🔄</span>
-            </div>
-            <div class="section-content weather-grid-container" id="daily-forecasts">
-                 <div class="placeholder-text">正在获取实时天气数据...</div>
-            </div>
-        </section>
-
-        <section class="info-section" id="weekly-weather">
-            <div class="section-header">
-                <span class="icon">📅</span><h2>未来10天长期预报</h2><span class="refresh-icon" onclick="refreshSection('weekly-weather')">🔄</span>
-            </div>
-            <div class="section-content weather-grid-container" id="weekly-forecasts">
-                <div class="placeholder-text">正在获取长期预报数据...</div>
-            </div>
-        </section>
-        
-
-        <section class="info-section" id="hallasan">
-            <div class="section-header">
-                <span class="icon">🏔️</span><h2>汉拿山探访路管制信息</h2><span class="badge" id="hallasan-status">查询中</span><span class="refresh-icon" onclick="refreshSection('hallasan')">🔄</span>
-            </div>
-            <div class="section-content" id="hallasan-list">
-                <div class="placeholder-text">正在获取实时管制信息...</div>
-            </div>
-        </section>
-
-        <section class="info-section" id="festivals">
-            <div class="section-header">
-                <span class="icon">🎉</span><h2>济州节庆活动</h2><span class="refresh-icon" onclick="refreshSection('festivals')">🔄</span>
-            </div>
-            <div class="section-content" id="festivals-list">
-                <div class="placeholder-text">正在获取节庆活动信息...</div>
-            </div>
-        </section>
-
-        <section class="info-section" id="flights">
-            <div class="section-header">
-                <span class="icon">✈️</span><h2>国际线航班变动信息</h2>
-            </div>
-            <div class="section-content">
-                <h3>出发 (Departures) <span class="refresh-icon" onclick="fetchFlightData('dep')">🔄</span></h3>
-                <div class="flight-list" id="flight-list-dep"><div class="placeholder-text">正在获取出发信息...</div></div>
-                <h3 style="margin-top: 30px;">到达 (Arrivals) <span class="refresh-icon" onclick="fetchFlightData('arr')">🔄</span></h3>
-                <div class="flight-list" id="flight-list-arr"><div class="placeholder-text">正在获取到达信息...</div></div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="app-footer">
-        <p>数据来源: 韩国气象厅 (KMA), 韩国机场集团 (KAC), 济州特别自治道, VisitJeju</p>
-        <p>&copy; 2026 济州岛实时信息. All Rights Reserved.</p>
-    </footer>
-
-    <script>
-        function log(msg) { console.log(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg); }
-
-        const MASTER_KEY = '05988a053767a7a6cc5553d077ce7ea541c60806a0160d5ac2e9119ebe5a61ce';
-        
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth()+1).padStart(2,'0'); 
-        const dd = String(now.getDate()).padStart(2,'0');
-        const todayStr = yyyy + mm + dd;
-        
-        document.getElementById('date-label').innerText = \`\${mm}月\${dd}日\`;
-
-        // --- Chat Logic ---
-        function initChat() {
-            const chatMessages = document.getElementById('chat-messages');
-            const nameInput = document.getElementById('chat-name');
-            const messageInput = document.getElementById('chat-message-input');
-            const sendButton = document.getElementById('chat-send-button');
-            let websocket;
-
-            function addMessage(message) {
-                const msgDiv = document.createElement('div');
-                msgDiv.className = 'chat-message';
-                const date = new Date(message.timestamp);
-                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                msgDiv.innerHTML = \`
-                    <div>
-                        <span class="name">\${message.name || 'Anonymous'}</span>
-                        <span class="timestamp">\${timeString}</span>
-                    </div>
-                    <div class="text">\${message.text}</div>
-                \`;
-                chatMessages.appendChild(msgDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            async function connectWebSocket() {
-                // Fetch initial messages
-                try {
-                    const response = await fetch('/chat/messages');
-                    const initialMessages = await response.json();
-                    chatMessages.innerHTML = '';
-                    initialMessages.forEach(addMessage);
-                } catch(e) {
-                    chatMessages.innerHTML = '<div class="placeholder-text">지난 메시지를 불러오는데 실패했습니다.</div>';
-                    console.error('Failed to fetch initial messages:', e);
-                }
-
-                // Establish WebSocket connection
-                const wsUrl = \`wss://\${window.location.host}/chat/websocket\`;
-                websocket = new WebSocket(wsUrl);
-
-                websocket.onmessage = (event) => {
-                    try {
-                        const message = JSON.parse(event.data);
-                        if (message.error) {
-                            console.error('WebSocket error:', message.error);
-                            return;
-                        }
-                        addMessage(message);
-                    } catch (e) {
-                        console.error('Failed to parse message:', e);
-                    }
-                };
-
-                websocket.onclose = () => {
-                    console.log('WebSocket disconnected. Reconnecting...');
-                    setTimeout(connectWebSocket, 1000); // Reconnect after 1 second
-                };
-
-                websocket.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                    websocket.close();
-                };
-            }
-
-            sendButton.addEventListener('click', () => {
-                const name = nameInput.value.trim();
-                const text = messageInput.value.trim();
-                if (!name || !text) {
-                    alert('이름과 메시지를 모두 입력해주세요.');
-                    return;
-                }
-                if (websocket && websocket.readyState === WebSocket.OPEN) {
-                    websocket.send(JSON.stringify({ name, text }));
-                    messageInput.value = '';
-                } else {
-                    alert('채팅 서버에 연결되지 않았습니다. 잠시 후 다시 시도해주세요.');
-                }
-            });
-            
-            messageInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    sendButton.click();
-                }
-            });
-
-            connectWebSocket();
-        }
-
-        // --- Other initializations ---
-        function getFormatDate(date) {
-            const y = date.getFullYear();
-            const m = ('0' + (date.getMonth() + 1)).slice(-2);
-            const d = ('0' + date.getDate()).slice(-2);
-            return y + '' + m + '' + d;
-        }
-
-        async function initDaily() {
-            const container = document.getElementById('daily-forecasts');
-            container.innerHTML = '';
-            const locs = [
-                {n:"济州市 (莲洞)", sub:"Yeon-dong", x:52, y:38}, {n:"西归浦 (中文)", sub:"Jungmun", x:52, y:32},
-                {n:"汉拿山", sub:"Halla Mtn.", x:52, y:35}, {n:"牛岛", sub:"Udo Island", x:60, y:38}
-            ];
-            let baseDate = todayStr, baseTime = "0200";
-            if (now.getHours() < 3) {
-                 const yD = new Date(yyyy, now.getMonth(), now.getDate() - 1);
-                 baseDate = getFormatDate(yD);
-                 baseTime = "2300";
-            }
-            for (const loc of locs) {
-                try {
-                    const apiUrl = \`/weather/short?base_date=\${baseDate}&base_time=\${baseTime}&nx=\${loc.x}&ny=\${loc.y}\`;
-                    const res = await fetch(apiUrl);
-                    const json = await res.json();
-                    const hourly = {};
-                    if(json.response && json.response.header.resultCode === '00'){
-                        json.response.body.items.item.forEach(i => {
-                            if (i.fcstDate === todayStr) {
-                                const h = parseInt(i.fcstTime.slice(0,2));
-                                if(h>=9 && h<=22) {
-                                    if(!hourly[h]) hourly[h] = {};
-                                    hourly[h][i.category] = i.fcstValue;
-                                }
-                            }
-                        });
-                        let html = \`<div class="hourly-grid">\`;
-                        for(let h=9; h<=22; h++) {
-                            const d = hourly[h] || {};
-                            let icon = '☀️';
-                            const pty=parseInt(d.PTY||0), sky=parseInt(d.SKY||1);
-                            if(pty>0) icon=(pty===3)?'❄️':'🌧️'; else if(sky>8) icon='☁️'; else if(sky>5) icon='⛅';
-                            if(h>=19 && (icon==='☀️'||icon==='⛅')) icon='🌙';
-                            let pcp = d.PCP || '0';
-                            if (pcp === "강수없음") pcp = "0mm"; else if (pcp.includes("미만")) pcp = "~1mm"; else if (!pcp.endsWith("mm")) pcp += "mm";
-                            html += \`<div class="hourly-col"><div class="time">\${h}h</div><div class="icon">\${icon}</div><div class="temp">\${d.TMP||'-'}°</div><div class="precip \${pcp!=='0mm'?'precip-blue':''}">\${pcp}</div><div style="font-size:10px; color:#555;">\${d.WSD||'-'}m/s</div></div>\`;
-                        }
-                        html += \`</div>\`;
-                        const locationDiv = document.createElement('div');
-                        locationDiv.className = 'weather-location-group';
-                        locationDiv.innerHTML = \`<div class="loc-info"><span class="loc-name">\${loc.n}</span><span class="loc-sub">\${loc.sub}</span></div>\${html}\`;
-                        container.appendChild(locationDiv);
-                    }
-                } catch(e) { log(\`Daily Error for \${loc.n}: \${e.message}\`); }
-            }
-        }
-
-        async function initWeekly() {
-            // ... (rest of the functions remain the same)
-        }
-
-        function initCCTV() {
-            // ...
-        }
-        
-        async function initHallasan() {
-            // ...
-        }
-
-        async function fetchFlightData(flightType) {
-            // ...
-        }
-        
-        function createFlightItemHTML(flight, type) {
-            // ...
-        }
-
-        async function initFestivals() {
-            // ...
-        }
-        
-        function refreshSection(sectionId) {
-            switch(sectionId) {
-                case 'cctv': initCCTV(); break;
-                case 'weather': initDaily(); break;
-                case 'weekly-weather': initWeekly(); break;
-                case 'hallasan': initHallasan(); break;
-                case 'festivals': initFestivals(); break;
-                case 'flights-dep': fetchFlightData('dep'); break;
-                case 'flights-arr': fetchFlightData('arr'); break;
-                default: console.warn('Unknown sectionId for refresh:', sectionId);
-            }
-        }
-        function refreshAllSections() {
-            refreshSection('cctv');
-            refreshSection('weather');
-            refreshSection('weekly-weather');
-            refreshSection('hallasan');
-            refreshSection('festivals');
-            refreshSection('flights-dep');
-            refreshSection('flights-arr');
-        }
-        
-        // --- Execute all initialization functions ---
-        refreshAllSections();
-        initChat(); // Initialize Chat
-    </script>
-    <!-- Cloudflare Pages Build Trigger -->
-</body>
-</html>\`;
-
-import { ChatRoom } from './chat.js';
-
+// Durable Object 클래스를 export 해야 wrangler가 인식할 수 있습니다.
 export { ChatRoom };
 
+// ES 모듈 형식의 기본 export
 export default {
-  async fetch(request, env) {
-    return await handleRequest(request, env).catch(
-      (err) => new Response(err.stack, { status: 500 })
-    );
-  },
+  async fetch(request, env, ctx) {
+    try {
+      return await handleRequest(request, env);
+    } catch (e) {
+      // 에러 발생 시, 에러 스택을 포함한 응답을 반환합니다.
+      return new Response(e.stack, { status: 500 });
+    }
+  }
 };
 
+// 모든 요청을 처리하는 메인 함수
 async function handleRequest(request, env) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
+  // 1. 채팅 관련 요청(/chat/으로 시작)은 Durable Object로 전달합니다.
   if (pathname.startsWith('/chat/')) {
+    // 모든 사용자가 동일한 채팅방을 사용하도록 고정된 ID를 사용합니다.
     const id = env.CHAT_ROOM.idFromName("global-chat-room");
     const stub = env.CHAT_ROOM.get(id);
-    return stub.fetch(request);
+    return stub.fetch(request); // 요청을 Durable Object로 전달
   }
 
+  // 2. 파비콘 요청은 204 No Content로 처리하여 콘솔 에러를 방지합니다.
   if (pathname === '/favicon.ico') {
     return new Response(null, { status: 204 });
   }
 
+  // 3. 메인 페이지('/') 요청 시, GitHub에서 최신 index.html을 가져와 서비스합니다.
   if (pathname === '/') {
+    const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html?v=' + Date.now();
+    const response = await fetch(githubUrl);
+
     const headers = new Headers();
     headers.set('Content-Type', 'text/html;charset=UTF-8');
     headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     headers.set('Pragma', 'no-cache');
     headers.set('Expires', '0');
-    headers.set('Content-Security-Policy', 
-        "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; " +
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-        "font-src 'self' https://fonts.gstatic.com; " +
-        "connect-src * wss: https://www.google-analytics.com https://www.googletagmanager.com; " +
-        "media-src 'self' blob: http://211.114.96.121:1935 http://119.65.216.155:1935; " +
-        "img-src 'self' data: https://www.googletagmanager.com;"
+    
+    // 웹소켓(wss:)과 Google 태그 관련 도메인을 허용하도록 CSP를 설정합니다.
+    headers.set('Content-Security-Policy',
+      "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com; " +
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+      "font-src 'self' https://fonts.gstatic.com; " +
+      "connect-src * wss:; " +
+      "media-src 'self' blob: http://211.114.96.121:1935 http://119.65.216.155:1935; " +
+      "img-src 'self' data: https://www.googletagmanager.com;"
     );
 
-    return new Response(htmlContent, { headers });
+    return new Response(response.body, { headers });
   }
 
+  // 4. 나머지 API 요청들을 프록시 처리합니다.
   let targetUrl;
   const newHeaders = new Headers(request.headers);
 
-  // --- API Routing ---
   if (pathname.startsWith('/weather/')) {
     const type = pathname.split('/')[2];
-    const regId = url.searchParams.get('regId');
-    const tmFc = url.searchParams.get('tmFc');
-    const nx = url.searchParams.get('nx');
-    const ny = url.searchParams.get('ny');
-    const base_date = url.searchParams.get('base_date');
-    const base_time = url.searchParams.get('base_time');
-
+    const params = url.searchParams;
     let endpoint;
     if (type === 'short') {
-      endpoint = \`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?numOfRows=1000&pageNo=1&dataType=JSON&base_date=\${base_date}&base_time=\${base_time}&nx=\${nx}&ny=\${ny}\`;
+      endpoint = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?numOfRows=1000&pageNo=1&dataType=JSON&base_date=${params.get('base_date')}&base_time=${params.get('base_time')}&nx=${params.get('nx')}&ny=${params.get('ny')}`;
     } else if (type === 'mid-temp') {
-      endpoint = \`https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?dataType=JSON&regId=\${regId}&tmFc=\${tmFc}\`;
-    } else if (type === 'mid-land') {
-      endpoint = \`https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId=\${regId}&tmFc=\${tmFc}\`;
+      endpoint = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?dataType=JSON&regId=${params.get('regId')}&tmFc=${params.get('tmFc')}`;
     } else {
-      return new Response('Invalid weather API type', { status: 400 });
+      endpoint = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId=${params.get('regId')}&tmFc=${params.get('tmFc')}`;
     }
-    targetUrl = \`\${endpoint}&serviceKey=\${env.MASTER_KEY}\`;
+    targetUrl = `${endpoint}&serviceKey=${env.MASTER_KEY}`;
   }
   else if (pathname === '/festivals') {
-    targetUrl = \`http://api.visitjeju.net/vsjApi/contents/searchList?apiKey=\${env.VISIT_JEJU_API_KEY}&locale=cn\`;
+    targetUrl = `http://api.visitjeju.net/vsjApi/contents/searchList?apiKey=${env.VISIT_JEJU_API_KEY}&locale=cn`;
   }
   else if (pathname.startsWith('/flights/')) {
     const type = pathname.split('/')[2];
     const airportParam = type === 'dep' ? 'airport_code=CJU' : 'arr_airport_code=CJU';
     const endpoint = type === 'dep' ? 'getDepFlightStatusList' : 'getArrFlightStatusList';
-    const todayStr = url.searchParams.get('searchday');
-    targetUrl = \`http://openapi.airport.co.kr/service/rest/StatusOfFlights/\${endpoint}?\${airportParam}&line=I&searchday=\${todayStr}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100&serviceKey=\${env.MASTER_KEY}\`;
+    targetUrl = `http://openapi.airport.co.kr/service/rest/StatusOfFlights/${endpoint}?${airportParam}&line=I&searchday=${url.searchParams.get('searchday')}&from_time=0000&to_time=2359&pageNo=1&numOfRows=100&serviceKey=${env.MASTER_KEY}`;
   }
   else if (pathname === '/hallasan') {
     targetUrl = 'https://jeju.go.kr/tool/hallasan/road-body.jsp';
@@ -682,7 +98,6 @@ async function handleRequest(request, env) {
     return new Response('API endpoint not found.', { status: 404 });
   }
 
-  // --- Generic Proxy Logic ---
   const proxyRequest = new Request(targetUrl, {
     method: request.method,
     headers: newHeaders,
@@ -693,14 +108,12 @@ async function handleRequest(request, env) {
     const response = await fetch(proxyRequest);
     const responseHeaders = new Headers(response.headers);
     responseHeaders.set('Access-Control-Allow-Origin', '*');
-    responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
-    responseHeaders.set('Access-Control-Allow-Headers', 'Content-Type');
-    
+
     if (pathname === '/hallasan' && response.headers.get('content-type')?.includes('euc-kr')) {
-        const buffer = await response.arrayBuffer();
-        const decoder = new TextDecoder('euc-kr');
-        const text = decoder.decode(buffer);
-        return new Response(text, { status: response.status, headers: responseHeaders });
+      const buffer = await response.arrayBuffer();
+      const decoder = new TextDecoder('euc-kr');
+      const text = decoder.decode(buffer);
+      return new Response(text, { status: response.status, headers: responseHeaders });
     }
 
     return new Response(response.body, {

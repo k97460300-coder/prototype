@@ -18,6 +18,7 @@ export class ChatRoom {
   async fetch(request) {
     const url = new URL(request.url);
 
+    // IMPORTANT: Check for the full path
     if (url.pathname === '/chat/websocket') {
       // This is a WebSocket upgrade request.
       const pair = new WebSocketPair();
