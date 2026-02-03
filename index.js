@@ -7,14 +7,14 @@ async function handleDynamicRequest(request, env) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // 1. 채팅 관련 요청(/chat/으로 시작)은 Durable Object로 전달합니다.
+  // 1. 채팅 관련 요청 (일시적으로 비활성화)
   // if (pathname.startsWith('/chat/')) {
   //   const id = env.CHAT_ROOM.idFromName("global-chat-room");
   //   const stub = env.CHAT_ROOM.get(id);
   //   return stub.fetch(request);
   // }
 
-  // 2. 파비콘 요청은 204 No Content로 처리하여 콘솔 에러를 방지합니다.
+  // 2. 파비콘 요청
   if (pathname === '/favicon.ico') {
     return new Response(null, { status: 204 });
   }
@@ -56,7 +56,6 @@ async function handleDynamicRequest(request, env) {
     newHeaders.set('Referer', targetOrigin + '/');
   }
 
-  // targetUrl이 설정된 경우 (즉, API 라우트가 일치하는 경우) 프록시 요청을 실행합니다.
   if (targetUrl) {
     const proxyRequest = new Request(targetUrl, {
       method: request.method,
@@ -92,14 +91,10 @@ async function handleDynamicRequest(request, env) {
 export default {
   async fetch(request, env, ctx) {
     try {
-      // 1. API, WebSocket 등 동적 요청을 먼저 확인하고 처리합니다.
       const response = await handleDynamicRequest(request, env);
       if (response) {
         return response;
       }
-
-      // 2. 동적 요청이 아니면, 정적 에셋(HTML, CSS 등)을 찾아서 반환합니다.
-      // 이 로직은 wrangler.toml의 [site] 설정에 의해 업로드된 파일을 사용합니다.
       return await getAssetFromKV(
         {
           request,
@@ -111,8 +106,6 @@ export default {
         }
       );
     } catch (e) {
-      // getAssetFromKV가 파일을 찾지 못하면 오류가 발생합니다.
-      // 대부분의 경우 이는 404를 의미합니다.
       return new Response('Not Found', { status: 404 });
     }
   }
