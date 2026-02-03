@@ -1,18 +1,18 @@
-import { ChatRoom } from './chat.js';
+// import { ChatRoom } from './chat.js';
 import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 
-export { ChatRoom };
+// export { ChatRoom };
 
 async function handleDynamicRequest(request, env) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
   // 1. 채팅 관련 요청(/chat/으로 시작)은 Durable Object로 전달합니다.
-  if (pathname.startsWith('/chat/')) {
-    const id = env.CHAT_ROOM.idFromName("global-chat-room");
-    const stub = env.CHAT_ROOM.get(id);
-    return stub.fetch(request);
-  }
+  // if (pathname.startsWith('/chat/')) {
+  //   const id = env.CHAT_ROOM.idFromName("global-chat-room");
+  //   const stub = env.CHAT_ROOM.get(id);
+  //   return stub.fetch(request);
+  // }
 
   // 2. 파비콘 요청은 204 No Content로 처리하여 콘솔 에러를 방지합니다.
   if (pathname === '/favicon.ico') {

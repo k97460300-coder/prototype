@@ -6,11 +6,11 @@ compatibility_date = "2026-01-30"
 [site]
 bucket = "./public"
 
-[durable_objects]
-bindings = [
-   { name = "CHAT_ROOM", class_name = "ChatRoom" }
-]
+# [durable_objects]
+# bindings = [
+#    { name = "CHAT_ROOM", class_name = "ChatRoom" }
+# ]
    
-[[migrations]]
-    tag = "v2"
-    new_sqlite_classes = ["ChatRoom"]
+# [[migrations]]
+#     tag = "v2"
+#     new_sqlite_classes = ["ChatRoom"]
