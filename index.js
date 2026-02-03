@@ -1,31 +1,17 @@
 import { ChatRoom } from './chat.js';
+import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 
-// Durable Object 클래스를 export 해야 wrangler가 인식할 수 있습니다.
 export { ChatRoom };
 
-// ES 모듈 형식의 기본 export
-export default {
-  async fetch(request, env, ctx) {
-    try {
-      return await handleRequest(request, env);
-    } catch (e) {
-      // 에러 발생 시, 에러 스택을 포함한 응답을 반환합니다.
-      return new Response(e.stack, { status: 500 });
-    }
-  }
-};
-
-// 모든 요청을 처리하는 메인 함수
-async function handleRequest(request, env) {
+async function handleDynamicRequest(request, env) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
   // 1. 채팅 관련 요청(/chat/으로 시작)은 Durable Object로 전달합니다.
   if (pathname.startsWith('/chat/')) {
-    // 모든 사용자가 동일한 채팅방을 사용하도록 고정된 ID를 사용합니다.
     const id = env.CHAT_ROOM.idFromName("global-chat-room");
     const stub = env.CHAT_ROOM.get(id);
-    return stub.fetch(request); // 요청을 Durable Object로 전달
+    return stub.fetch(request);
   }
 
   // 2. 파비콘 요청은 204 No Content로 처리하여 콘솔 에러를 방지합니다.
@@ -33,7 +19,7 @@ async function handleRequest(request, env) {
     return new Response(null, { status: 204 });
   }
 
-  // 4. API 요청을 프록시 처리합니다.
+  // 3. API 요청을 프록시 처리합니다.
   let targetUrl;
   const newHeaders = new Headers(request.headers);
 
@@ -100,6 +86,34 @@ async function handleRequest(request, env) {
     }
   }
 
-  // API 라우트가 아닌 다른 모든 요청은 여기로 오게 되며,
-  // 아무것도 반환하지 않음으로써 정적 에셋 핸들러가 처리하도록 합니다.
+  return null;
 }
+
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      // 1. API, WebSocket 등 동적 요청을 먼저 확인하고 처리합니다.
+      const response = await handleDynamicRequest(request, env);
+      if (response) {
+        return response;
+      }
+
+      // 2. 동적 요청이 아니면, 정적 에셋(HTML, CSS 등)을 찾아서 반환합니다.
+      // 이 로직은 wrangler.toml의 [site] 설정에 의해 업로드된 파일을 사용합니다.
+      return await getAssetFromKV(
+        {
+          request,
+          waitUntil: (promise) => ctx.waitUntil(promise),
+        },
+        {
+          ASSET_NAMESPACE: env.__STATIC_CONTENT,
+          ASSET_MANIFEST: JSON.parse(env.__STATIC_CONTENT_MANIFEST),
+        }
+      );
+    } catch (e) {
+      // getAssetFromKV가 파일을 찾지 못하면 오류가 발생합니다.
+      // 대부분의 경우 이는 404를 의미합니다.
+      return new Response('Not Found', { status: 404 });
+    }
+  }
+};
