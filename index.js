@@ -1,3 +1,4 @@
+// This is a trivial change to trigger a new build (final attempt for secret)
 // import { ChatRoom } from './chat.js';
 import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 
