@@ -33,31 +33,6 @@ async function handleRequest(request, env) {
     return new Response(null, { status: 204 });
   }
 
-  // 3. 메인 페이지('/') 요청 시, GitHub에서 최신 index.html을 가져와 서비스합니다.
-  if (pathname === '/') {
-    const githubUrl = 'https://raw.githubusercontent.com/k97460300-coder/prototype/main/index.html?v=' + Date.now();
-    const response = await fetch(githubUrl);
-
-    const headers = new Headers();
-    headers.set('Content-Type', 'text/html;charset=UTF-8');
-    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    headers.set('Pragma', 'no-cache');
-    headers.set('Expires', '0');
-    
-    // 웹소켓(wss:)과 Google 태그 관련 도메인을 허용하도록 CSP를 설정합니다.
-    headers.set('Content-Security-Policy',
-      "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com; " +
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-      "font-src 'self' https://fonts.gstatic.com; " +
-      "connect-src * wss:; " +
-      "media-src 'self' blob: http://211.114.96.121:1935 http://119.65.216.155:1935; " +
-      "img-src 'self' data: https://www.googletagmanager.com;"
-    );
-
-    return new Response(response.body, { headers });
-  }
-
   // 4. 나머지 API 요청들을 프록시 처리합니다.
   let targetUrl;
   const newHeaders = new Headers(request.headers);
