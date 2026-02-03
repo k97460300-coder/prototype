@@ -7,6 +7,6 @@ bindings = [
    { name = "CHAT_ROOM", class_name = "ChatRoom" }
 ]
    
-    [[migrations]]
-    tag = "v1"
+[[migrations]]
+    tag = "v2"
     new_sqlite_classes = ["ChatRoom"]
