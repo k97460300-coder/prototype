@@ -1,4 +1,3 @@
-// This is a trivial change to trigger a new build
 // import { ChatRoom } from './chat.js';
 import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 
