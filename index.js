@@ -33,7 +33,7 @@ async function handleRequest(request, env) {
     return new Response(null, { status: 204 });
   }
 
-  // 4. 나머지 API 요청들을 프록시 처리합니다.
+  // 4. API 요청을 프록시 처리합니다.
   let targetUrl;
   const newHeaders = new Headers(request.headers);
 
@@ -69,34 +69,37 @@ async function handleRequest(request, env) {
     newHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     newHeaders.set('Referer', targetOrigin + '/');
   }
-  else {
-    return new Response('API endpoint not found.', { status: 404 });
-  }
 
-  const proxyRequest = new Request(targetUrl, {
-    method: request.method,
-    headers: newHeaders,
-    redirect: 'follow'
-  });
-
-  try {
-    const response = await fetch(proxyRequest);
-    const responseHeaders = new Headers(response.headers);
-    responseHeaders.set('Access-Control-Allow-Origin', '*');
-
-    if (pathname === '/hallasan' && response.headers.get('content-type')?.includes('euc-kr')) {
-      const buffer = await response.arrayBuffer();
-      const decoder = new TextDecoder('euc-kr');
-      const text = decoder.decode(buffer);
-      return new Response(text, { status: response.status, headers: responseHeaders });
-    }
-
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: responseHeaders
+  // targetUrl이 설정된 경우 (즉, API 라우트가 일치하는 경우) 프록시 요청을 실행합니다.
+  if (targetUrl) {
+    const proxyRequest = new Request(targetUrl, {
+      method: request.method,
+      headers: newHeaders,
+      redirect: 'follow'
     });
-  } catch (error) {
-    return new Response('Error fetching from proxy: ' + error.message, { status: 500 });
+
+    try {
+      const response = await fetch(proxyRequest);
+      const responseHeaders = new Headers(response.headers);
+      responseHeaders.set('Access-Control-Allow-Origin', '*');
+
+      if (pathname === '/hallasan' && response.headers.get('content-type')?.includes('euc-kr')) {
+        const buffer = await response.arrayBuffer();
+        const decoder = new TextDecoder('euc-kr');
+        const text = decoder.decode(buffer);
+        return new Response(text, { status: response.status, headers: responseHeaders });
+      }
+
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: responseHeaders
+      });
+    } catch (error) {
+      return new Response('Error fetching from proxy: ' + error.message, { status: 500 });
+    }
   }
+
+  // API 라우트가 아닌 다른 모든 요청은 여기로 오게 되며,
+  // 아무것도 반환하지 않음으로써 정적 에셋 핸들러가 처리하도록 합니다.
 }
