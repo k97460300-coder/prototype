@@ -107,7 +107,10 @@ export default {
         }
       );
     } catch (e) {
-      return new Response('Not Found', { status: 404 });
+      // If getAssetFromKV throws an error, it means the asset is not found.
+      // In this case, we return a 404 response.
+      let pathname = new URL(request.url).pathname;
+      return new Response(`Asset not found: ${pathname}\n${e.stack}`, { status: 404 });
     }
   }
 };
